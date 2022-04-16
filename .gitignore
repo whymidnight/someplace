@@ -1,1 +1,4 @@
-target
+**/target
+**/vendor
+**/go.sum
+**/*.key

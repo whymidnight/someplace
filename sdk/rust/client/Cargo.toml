@@ -1,0 +1,24 @@
+[package]
+name = "sdk"
+version = "0.23.0"
+authors = ["Serum Foundation <foundation@projectserum.com>"]
+rust-version = "1.56"
+edition = "2021"
+license = "Apache-2.0"
+description = "Rust client for Anchor programs"
+
+[features]
+debug = []
+
+[dependencies]
+anchor-lang = { version = "0.21.0" }
+anyhow = "1.0.32"
+regex = "1.4.5"
+serde = { version = "1.0.122", features = ["derive"] }
+thiserror = "1.0.20"
+url = "2.2.2"
+someplace = { path = "../../../contracts/someplace", features = ["no-entrypoint"] }
+serde_json = "1.0"
+base64 = "0.13.0"
+log =  "0.4.16"
+surf = { git = "https://github.com/media-io/surf", features = ["native-client"], default-features = false}

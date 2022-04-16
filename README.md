@@ -1,11 +1,17 @@
-# anchor-scaffold
+# Questing
 
-An escrow program is a great example to get started with Solana, it allows discovering the main principles and to interact with the token program.
 
-While this is an anchor E2E example, this doesn't cover at all the underlying principles, i recommend to get started with [The "vanilla" Solana Paulx escrow tutorial](https://paulx.dev/blog/2021/01/14/programming-on-solana-an-introduction/)
+The program is located in `./contracts/someplace`.
 
-## Escrow program
+The progam tests are in `./tests/`.
 
-The program is similar but not exactly https://github.com/project-serum/anchor/tree/master/tests/escrow
+The progam webassembly are in `./wasm/`.
 
-Some modification have been made to make it more anchor-y and easier to handle in the UI.
+# To run the tests
+
+Ensure `go1.16` is installed.
+
+```
+go mod vendor
+go run main.go
+```

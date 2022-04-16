@@ -1,0 +1,28 @@
+[package]
+name = "someplace"
+version = "0.1.0"
+description = "Created with Anchor"
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "someplace"
+doctest = false
+
+[features]
+no-entrypoint = []
+no-idl = []
+cpi = ["no-entrypoint"]
+default = []
+
+[dependencies]
+anchor-lang = "0.21.0"
+anchor-spl = "0.21.0"
+mpl-candy-machine = "3.1.1"
+mpl-token-metadata = "1.2.5"
+arrayref = "~0.3.6"
+spl-associated-token-account = {version = "~1.0.3", features = ["no-entrypoint"]}
+solana-program = "~1.9.5"
+spl-token = { version="3.1.1", features = [ "no-entrypoint" ] }
+spl-token-metadata = { version="0.0.1", features = [ "no-entrypoint" ] }
+serde = { version = "1.0.122", features = ["derive"] }
