@@ -28,9 +28,15 @@ func init() {
 }
 
 var (
+	Instruction_CreateMarketListing = ag_binary.TypeID([8]byte{84, 255, 145, 58, 74, 134, 93, 15})
+
+	Instruction_FulfillMarketListing = ag_binary.TypeID([8]byte{171, 101, 117, 183, 127, 117, 107, 96})
+
 	Instruction_CreateListing = ag_binary.TypeID([8]byte{18, 168, 45, 24, 191, 31, 117, 54})
 
 	Instruction_EnableBatchUploading = ag_binary.TypeID([8]byte{212, 38, 162, 41, 25, 159, 102, 80})
+
+	Instruction_InitMarket = ag_binary.TypeID([8]byte{33, 253, 15, 116, 89, 25, 127, 236})
 
 	Instruction_InitTreasury = ag_binary.TypeID([8]byte{105, 152, 173, 51, 158, 151, 49, 14})
 
@@ -48,10 +54,16 @@ var (
 // InstructionIDToName returns the name of the instruction given its ID.
 func InstructionIDToName(id ag_binary.TypeID) string {
 	switch id {
+	case Instruction_CreateMarketListing:
+		return "CreateMarketListing"
+	case Instruction_FulfillMarketListing:
+		return "FulfillMarketListing"
 	case Instruction_CreateListing:
 		return "CreateListing"
 	case Instruction_EnableBatchUploading:
 		return "EnableBatchUploading"
+	case Instruction_InitMarket:
+		return "InitMarket"
 	case Instruction_InitTreasury:
 		return "InitTreasury"
 	case Instruction_AddWhitelistedCm:
@@ -85,10 +97,19 @@ var InstructionImplDef = ag_binary.NewVariantDefinition(
 	ag_binary.AnchorTypeIDEncoding,
 	[]ag_binary.VariantType{
 		{
+			"create_market_listing", (*CreateMarketListing)(nil),
+		},
+		{
+			"fulfill_market_listing", (*FulfillMarketListing)(nil),
+		},
+		{
 			"create_listing", (*CreateListing)(nil),
 		},
 		{
 			"enable_batch_uploading", (*EnableBatchUploading)(nil),
+		},
+		{
+			"init_market", (*InitMarket)(nil),
 		},
 		{
 			"init_treasury", (*InitTreasury)(nil),

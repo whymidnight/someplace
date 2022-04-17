@@ -21,6 +21,7 @@ import (
 func Buy(this js.Value, args []js.Value) interface{} {
 	holder := solana.MustPublicKeyFromBase58(args[0].String())
 	batchAccount := solana.MustPublicKeyFromBase58(args[1].String())
+	fmt.Println(args[2].String(), args[2].String(), args[2].String())
 	configIndex, configIndexError := strconv.Atoi(args[2].String())
 
 	handler := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
@@ -59,7 +60,7 @@ func mint(holder solana.PublicKey, candyMachineAddress solana.PublicKey, configI
 	mint := solana.NewWallet()
 	fmt.Println("wasm-mintKp", mint.PublicKey().String())
 
-	client := rpc.New("https://psytrbhymqlkfrhudd.dev.genesysgo.net:8899/")
+	client := rpc.New("https://sparkling-dark-shadow.solana-devnet.quiknode.pro/0e9964e4d70fe7f856e7d03bc7e41dc6a2b84452/")
 	userTokenAccountAddress, err := getTokenWallet(holder, mint.PublicKey())
 	if err != nil {
 		return []byte{}, errors.New("bad")
@@ -135,7 +136,7 @@ func mint(holder solana.PublicKey, candyMachineAddress solana.PublicKey, configI
 
 	}
 	userTreasuryTokenAccountAddress, err := getTokenWallet(holder, treasuryAuthorityData.TreasuryMint)
-	listing, _ := GetListing(cm.Oracle, candyMachineAddress, 0)
+	listing, _ := GetListing(cm.Oracle, candyMachineAddress, uint64(configIndex))
 	treasuryTokenAccount, _ := GetTreasuryTokenAccount(cm.Oracle)
 
 	mintIx := someplace.NewMintNftInstructionBuilder().
@@ -179,6 +180,7 @@ func mint(holder solana.PublicKey, candyMachineAddress solana.PublicKey, configI
 	}, "", "  ")
 
 	fmt.Println(string(txJson))
+	fmt.Println("configline", configIndex)
 
 	return txJson, nil
 

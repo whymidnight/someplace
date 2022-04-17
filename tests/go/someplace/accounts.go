@@ -576,3 +576,197 @@ func (obj *Listing) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err error)
 	}
 	return nil
 }
+
+type Market struct {
+	MarketDecimals uint8
+	Listings       uint64
+	Name           string
+	MarketMint     ag_solanago.PublicKey
+	MarketUid      ag_solanago.PublicKey
+	Oracle         ag_solanago.PublicKey
+}
+
+var MarketDiscriminator = [8]byte{219, 190, 213, 55, 0, 227, 198, 154}
+
+func (obj Market) MarshalWithEncoder(encoder *ag_binary.Encoder) (err error) {
+	// Write account discriminator:
+	err = encoder.WriteBytes(MarketDiscriminator[:], false)
+	if err != nil {
+		return err
+	}
+	// Serialize `MarketDecimals` param:
+	err = encoder.Encode(obj.MarketDecimals)
+	if err != nil {
+		return err
+	}
+	// Serialize `Listings` param:
+	err = encoder.Encode(obj.Listings)
+	if err != nil {
+		return err
+	}
+	// Serialize `Name` param:
+	err = encoder.Encode(obj.Name)
+	if err != nil {
+		return err
+	}
+	// Serialize `MarketMint` param:
+	err = encoder.Encode(obj.MarketMint)
+	if err != nil {
+		return err
+	}
+	// Serialize `MarketUid` param:
+	err = encoder.Encode(obj.MarketUid)
+	if err != nil {
+		return err
+	}
+	// Serialize `Oracle` param:
+	err = encoder.Encode(obj.Oracle)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (obj *Market) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err error) {
+	// Read and check account discriminator:
+	{
+		discriminator, err := decoder.ReadTypeID()
+		if err != nil {
+			return err
+		}
+		if !discriminator.Equal(MarketDiscriminator[:]) {
+			return fmt.Errorf(
+				"wrong discriminator: wanted %s, got %s",
+				"[219 190 213 55 0 227 198 154]",
+				fmt.Sprint(discriminator[:]))
+		}
+	}
+	// Deserialize `MarketDecimals`:
+	err = decoder.Decode(&obj.MarketDecimals)
+	if err != nil {
+		return err
+	}
+	// Deserialize `Listings`:
+	err = decoder.Decode(&obj.Listings)
+	if err != nil {
+		return err
+	}
+	// Deserialize `Name`:
+	err = decoder.Decode(&obj.Name)
+	if err != nil {
+		return err
+	}
+	// Deserialize `MarketMint`:
+	err = decoder.Decode(&obj.MarketMint)
+	if err != nil {
+		return err
+	}
+	// Deserialize `MarketUid`:
+	err = decoder.Decode(&obj.MarketUid)
+	if err != nil {
+		return err
+	}
+	// Deserialize `Oracle`:
+	err = decoder.Decode(&obj.Oracle)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type MarketListing struct {
+	MarketAuthority          ag_solanago.PublicKey
+	NftMint                  ag_solanago.PublicKey
+	SellerMarketTokenAccount ag_solanago.PublicKey
+	Index                    uint64
+	Price                    uint64
+	Fulfilled                uint8
+}
+
+var MarketListingDiscriminator = [8]byte{175, 123, 31, 97, 53, 211, 229, 16}
+
+func (obj MarketListing) MarshalWithEncoder(encoder *ag_binary.Encoder) (err error) {
+	// Write account discriminator:
+	err = encoder.WriteBytes(MarketListingDiscriminator[:], false)
+	if err != nil {
+		return err
+	}
+	// Serialize `MarketAuthority` param:
+	err = encoder.Encode(obj.MarketAuthority)
+	if err != nil {
+		return err
+	}
+	// Serialize `NftMint` param:
+	err = encoder.Encode(obj.NftMint)
+	if err != nil {
+		return err
+	}
+	// Serialize `SellerMarketTokenAccount` param:
+	err = encoder.Encode(obj.SellerMarketTokenAccount)
+	if err != nil {
+		return err
+	}
+	// Serialize `Index` param:
+	err = encoder.Encode(obj.Index)
+	if err != nil {
+		return err
+	}
+	// Serialize `Price` param:
+	err = encoder.Encode(obj.Price)
+	if err != nil {
+		return err
+	}
+	// Serialize `Fulfilled` param:
+	err = encoder.Encode(obj.Fulfilled)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (obj *MarketListing) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err error) {
+	// Read and check account discriminator:
+	{
+		discriminator, err := decoder.ReadTypeID()
+		if err != nil {
+			return err
+		}
+		if !discriminator.Equal(MarketListingDiscriminator[:]) {
+			return fmt.Errorf(
+				"wrong discriminator: wanted %s, got %s",
+				"[175 123 31 97 53 211 229 16]",
+				fmt.Sprint(discriminator[:]))
+		}
+	}
+	// Deserialize `MarketAuthority`:
+	err = decoder.Decode(&obj.MarketAuthority)
+	if err != nil {
+		return err
+	}
+	// Deserialize `NftMint`:
+	err = decoder.Decode(&obj.NftMint)
+	if err != nil {
+		return err
+	}
+	// Deserialize `SellerMarketTokenAccount`:
+	err = decoder.Decode(&obj.SellerMarketTokenAccount)
+	if err != nil {
+		return err
+	}
+	// Deserialize `Index`:
+	err = decoder.Decode(&obj.Index)
+	if err != nil {
+		return err
+	}
+	// Deserialize `Price`:
+	err = decoder.Decode(&obj.Price)
+	if err != nil {
+		return err
+	}
+	// Deserialize `Fulfilled`:
+	err = decoder.Decode(&obj.Fulfilled)
+	if err != nil {
+		return err
+	}
+	return nil
+}

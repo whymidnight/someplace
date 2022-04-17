@@ -89,3 +89,32 @@ pub struct Listing {
 impl Listing {
     pub const LEN: usize = 8 + 32 + 32 + 32 + 8 + 8 + 8 + 8;
 }
+
+#[account]
+#[derive(Default)]
+pub struct Market {
+    pub market_decimals: u8,
+    pub listings: u64,
+    pub name: String, // 32 bytes
+    pub market_mint: Pubkey,
+    pub market_uid: Pubkey,
+    pub oracle: Pubkey,
+}
+
+impl Market {
+    pub const LEN: usize = 8 + 1 + 8 + 32 + 32 + 32 + 32;
+}
+
+#[account]
+pub struct MarketListing {
+    pub market_authority: Pubkey,
+    pub nft_mint: Pubkey,
+    pub seller_market_token_account: Pubkey,
+    pub index: u64,
+    pub price: u64,
+    pub fulfilled: u8,
+}
+
+impl MarketListing {
+    pub const LEN: usize = 8 + 32 + 32 + 32 + 8 + 8 + 1;
+}

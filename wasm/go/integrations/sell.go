@@ -165,11 +165,11 @@ func nfts(holder, oracle solana.PublicKey) ([]byte, error) {
 }
 
 func burn(holder, mint, oracle solana.PublicKey) ([]byte, error) {
-	treasuryMint := solana.MustPublicKeyFromBase58("FWTYueaTkvBZg9xjonEhXXjhq1pqW7C1t2iZK4qCzmZ2")
 	treasuryAuthority, treasuryAuthorityBump := GetTreasuryAuthority(oracle)
+	treasuryMint := GetTreasuryAuthorityData(treasuryAuthority).TreasuryMint
 	treasuryTokenAccount, _ := GetTreasuryTokenAccount(oracle)
 	fmt.Println(mint)
-	client := rpc.New("https://psytrbhymqlkfrhudd.dev.genesysgo.net:8899/")
+	client := rpc.New("https://sparkling-dark-shadow.solana-devnet.quiknode.pro/0e9964e4d70fe7f856e7d03bc7e41dc6a2b84452/")
 	tokenAccounts, err := client.GetTokenAccountsByOwner(context.TODO(), holder, &rpc.GetTokenAccountsConfig{ProgramId: &solana.TokenProgramID}, &rpc.GetTokenAccountsOpts{Encoding: "jsonParsed"})
 	if err != nil {
 		fmt.Println("bad0")
@@ -200,6 +200,7 @@ func burn(holder, mint, oracle solana.PublicKey) ([]byte, error) {
 			if err != nil {
 				return tokens
 			}
+			fmt.Println("???", tokenData.Parsed.Info.Mint, mint)
 			switch tokenData.Parsed.Info.Mint {
 			case treasuryMint.String():
 				{
@@ -213,7 +214,6 @@ func burn(holder, mint, oracle solana.PublicKey) ([]byte, error) {
 				}
 			case mint.String():
 				{
-					fmt.Println("???", tokenData.Parsed.Info.TokenAmount.UiAmount, tokenData.Parsed.Info.Mint)
 					if tokenData.Parsed.Info.TokenAmount.UiAmount > 0 {
 						nftMint := solana.MustPublicKeyFromBase58(tokenData.Parsed.Info.Mint)
 						metadata, _ := getMetadata(nftMint)
@@ -262,7 +262,8 @@ func burn(holder, mint, oracle solana.PublicKey) ([]byte, error) {
 		SetTreasuryBump(treasuryAuthorityBump).
 		SetTreasuryTokenAccountAccount(treasuryTokenAccount).
 		SetTreasuryTokenMintAccount(treasuryMint).
-		SetTreasuryWhitelistAccount(tokens[1].treasuryWhitelist)
+		SetTreasuryWhitelistAccount(tokens[1].treasuryWhitelist).
+		SetOracleAccount(oracle)
 
 	sellIx := sellIxBuilder.Build()
 

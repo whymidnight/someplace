@@ -113,7 +113,7 @@ func GetBatches(
 }
 
 func GetBatchesData(batches solana.PublicKey) (someplace.Batches, error) {
-	rpcClient := rpc.New("https://psytrbhymqlkfrhudd.dev.genesysgo.net:8899/")
+	rpcClient := rpc.New("https://sparkling-dark-shadow.solana-devnet.quiknode.pro/0e9964e4d70fe7f856e7d03bc7e41dc6a2b84452/")
 	batchesBin, _ := rpcClient.GetAccountInfo(context.TODO(), batches)
 	var batchesData someplace.Batches
 	decoder := ag_binary.NewBorshDecoder(batchesBin.Value.Data.GetBinary())
@@ -127,7 +127,7 @@ func GetBatchesData(batches solana.PublicKey) (someplace.Batches, error) {
 }
 
 func GetBatchReceiptData(batchReceipt solana.PublicKey) (someplace.BatchReceipt, error) {
-	rpcClient := rpc.New("https://psytrbhymqlkfrhudd.dev.genesysgo.net:8899/")
+	rpcClient := rpc.New("https://sparkling-dark-shadow.solana-devnet.quiknode.pro/0e9964e4d70fe7f856e7d03bc7e41dc6a2b84452/")
 	batchReceiptBin, _ := rpcClient.GetAccountInfo(context.TODO(), batchReceipt)
 	var batchReceiptData someplace.BatchReceipt
 	decoder := ag_binary.NewBorshDecoder(batchReceiptBin.Value.Data.GetBinary())

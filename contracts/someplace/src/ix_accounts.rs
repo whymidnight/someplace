@@ -44,6 +44,82 @@ pub struct AddWhitelistedCM<'info> {
 }
 
 #[derive(Accounts)]
+#[instruction(market_uid: Pubkey)]
+pub struct InitMarket<'info> {
+    #[account(
+        init,
+        seeds = [PREFIX.as_ref(), MARKET.as_ref(), oracle.key().as_ref(), market_uid.as_ref()],
+        bump,
+        payer = oracle,
+        space = Market::LEN,
+    )]
+    pub market_authority: Account<'info, Market>,
+    #[account(mut)]
+    pub market_mint: Account<'info, Mint>,
+    #[account(mut)]
+    pub oracle: Signer<'info>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+#[instruction(index: u64)]
+pub struct InitMarketListing<'info> {
+    #[account(mut)]
+    pub market_authority: Account<'info, Market>,
+    #[account(
+        init,
+        seeds = [PREFIX.as_ref(), LISTING.as_ref(), market_authority.key().as_ref(), market_authority.listings.to_le_bytes().as_ref()],
+        bump,
+        payer = seller,
+        space = MarketListing::LEN,
+    )]
+    pub market_listing: Account<'info, MarketListing>,
+    #[account(
+        init,
+        seeds = [PREFIX.as_ref(), LISTINGTOKEN.as_ref(), market_authority.key().as_ref(), index.to_le_bytes().as_ref()],
+        bump,
+        payer = seller,
+        token::mint = nft_mint,
+        token::authority = market_authority
+    )]
+    pub market_listing_token_account: Account<'info, TokenAccount>,
+    #[account(mut)]
+    pub seller: Signer<'info>,
+    #[account(mut)]
+    pub seller_nft_token_account: Box<Account<'info, TokenAccount>>,
+    #[account(mut)]
+    pub seller_market_token_account: Box<Account<'info, TokenAccount>>,
+    #[account(mut)]
+    pub nft_mint: Account<'info, Mint>,
+    pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, Token>,
+    pub rent: Sysvar<'info, Rent>,
+}
+#[derive(Accounts)]
+pub struct FulfillMarketListing<'info> {
+    #[account(mut)]
+    pub market_authority: Account<'info, Market>,
+    #[account(mut)]
+    pub market_listing: Account<'info, MarketListing>,
+    #[account(mut)]
+    pub market_listing_token_account: Account<'info, TokenAccount>,
+    #[account(mut)]
+    pub buyer: Signer<'info>,
+    #[account(mut)]
+    pub nft_mint: Account<'info, Mint>,
+    #[account(mut)]
+    pub buyer_nft_token_account: Box<Account<'info, TokenAccount>>,
+    #[account(mut)]
+    pub buyer_market_token_account: Box<Account<'info, TokenAccount>>,
+    #[account(mut)]
+    pub seller_market_token_account: Box<Account<'info, TokenAccount>>,
+    #[account(mut)]
+    /// CHECK: !islazy && /s
+    pub oracle: UncheckedAccount<'info>,
+    pub token_program: Program<'info, Token>,
+}
+
+#[derive(Accounts)]
 pub struct InitTreasury<'info> {
     #[account(
         init,
@@ -93,7 +169,7 @@ pub struct SellFor<'info> {
     #[account(mut)]
     pub initializer: Signer<'info>,
     #[account(mut)]
-    pub initializer_token_account: Account<'info, TokenAccount>,
+    pub initializer_token_account: Box<Account<'info, TokenAccount>>,
     /// CHECK: legacy
     pub oracle: UncheckedAccount<'info>,
     pub token_program: Program<'info, Token>,

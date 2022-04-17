@@ -33,6 +33,9 @@ pub const CONFIG_ARRAY_START: usize = 8 + // key
     1 + 32 + 1 // gatekeeper
 ;
 pub const PREFIX: &[u8] = b"someplace";
+pub const LISTING: &[u8] = b"publiclisting";
+pub const LISTINGTOKEN: &[u8] = b"listingtoken";
+pub const MARKET: &[u8] = b"market";
 pub const BENEFIT_TOKEN: &[u8] = b"ballz";
 pub const TREASURY_MINT: &[u8] = b"treasury_mint";
 pub const TREASURY_WHITELIST: &[u8] = b"treasury_whitelist";

@@ -34,14 +34,215 @@ func main() {
 	// verifyBatchUpload()
 	// catalogBatches()
 	// treasure()
-	list()
+	// list()
 	// verifyList()
 	// treasureCMs()
 	// treasureVerify()
-	treasureVerifyCM()
+	// treasureVerifyCM()
 	// mint()
 	// holder_nft_metadata()
 	// burn()
+
+	// marketCreate()
+	// verifyMarketCreate()
+	// marketList()
+	verifyMarketList()
+	marketFulfill()
+
+}
+
+func verifyMarketCreate() {
+	marketUid := solana.MustPublicKeyFromBase58("GAm4cGVVMi5NMBVoxg8QhuKpQk2xW4BVbhnQrESE54HA")
+	oracle, err := solana.PrivateKeyFromSolanaKeygenFile("./oracle.key")
+	if err != nil {
+		panic(err)
+	}
+
+	marketAuthority, _ := GetMarketAuthority(oracle.PublicKey(), marketUid)
+	GetMarketAuthorityData(marketAuthority)
+}
+
+func marketCreate() {
+	marketUid := solana.MustPublicKeyFromBase58("GAm4cGVVMi5NMBVoxg8QhuKpQk2xW4BVbhnQrESE54HA")
+	mint := solana.MustPublicKeyFromBase58("3BXFE7LYyx4XcVN2rip68idXc63pomwKfXgQaEP9cawx")
+	oracle, err := solana.PrivateKeyFromSolanaKeygenFile("./oracle.key")
+	if err != nil {
+		panic(err)
+	}
+	marketAuthority, _ := GetMarketAuthority(oracle.PublicKey(), marketUid)
+
+	listIx := someplace.NewInitMarketInstructionBuilder().
+		SetMarketAuthorityAccount(marketAuthority).
+		SetMarketMintAccount(mint).
+		SetMarketUid(marketUid).
+		SetName("market test").
+		SetOracleAccount(oracle.PublicKey()).
+		SetSystemProgramAccount(solana.SystemProgramID)
+
+	err = listIx.Validate()
+	if err != nil {
+		panic(err)
+	}
+
+	sendTx(
+		"list",
+		append(make([]solana.Instruction, 0), listIx.Build()),
+		append(make([]solana.PrivateKey, 0), oracle),
+		oracle.PublicKey(),
+	)
+
+}
+
+func marketList() {
+	marketUid := solana.MustPublicKeyFromBase58("GAm4cGVVMi5NMBVoxg8QhuKpQk2xW4BVbhnQrESE54HA")
+	marketMint := solana.MustPublicKeyFromBase58("3BXFE7LYyx4XcVN2rip68idXc63pomwKfXgQaEP9cawx")
+	oracle, err := solana.PrivateKeyFromSolanaKeygenFile("./oracle.key")
+	if err != nil {
+		panic(err)
+	}
+	marketAuthority, _ := GetMarketAuthority(oracle.PublicKey(), marketUid)
+	marketAuthorityData := GetMarketAuthorityData(marketAuthority)
+	nftMint := solana.NewWallet().PrivateKey
+
+	userTokenAccountAddress, _ := getTokenWallet(oracle.PublicKey(), nftMint.PublicKey())
+	sellerMarketTokenAccountAddress, _ := getTokenWallet(oracle.PublicKey(), marketMint)
+
+	client := rpc.New("https://sparkling-dark-shadow.solana-devnet.quiknode.pro/0e9964e4d70fe7f856e7d03bc7e41dc6a2b84452/")
+	min, err := client.GetMinimumBalanceForRentExemption(context.TODO(), token.MINT_SIZE, rpc.CommitmentFinalized)
+	if err != nil {
+		panic(err)
+	}
+
+	var instructions []solana.Instruction
+	instructions = append(instructions,
+		system.NewCreateAccountInstructionBuilder().
+			SetOwner(token.ProgramID).
+			SetNewAccount(nftMint.PublicKey()).
+			SetSpace(token.MINT_SIZE).
+			SetFundingAccount(oracle.PublicKey()).
+			SetLamports(min).
+			Build(),
+
+		token.NewInitializeMint2InstructionBuilder().
+			SetMintAccount(nftMint.PublicKey()).
+			SetDecimals(0).
+			SetMintAuthority(oracle.PublicKey()).
+			SetFreezeAuthority(oracle.PublicKey()).
+			Build(),
+
+		atok.NewCreateInstructionBuilder().
+			SetPayer(oracle.PublicKey()).
+			SetWallet(oracle.PublicKey()).
+			SetMint(nftMint.PublicKey()).
+			Build(),
+
+		token.NewMintToInstructionBuilder().
+			SetMintAccount(nftMint.PublicKey()).
+			SetDestinationAccount(userTokenAccountAddress).
+			SetAuthorityAccount(oracle.PublicKey()).
+			SetAmount(1).
+			Build(),
+	)
+
+	marketListing, _ := GetMarketListing(marketAuthority, marketAuthorityData.Listings)
+	marketListingTokenAccount, _ := GetMarketListingTokenAccount(marketAuthority, marketAuthorityData.Listings)
+	listIx := someplace.NewCreateMarketListingInstructionBuilder().
+		SetIndex(marketAuthorityData.Listings).
+		SetMarketAuthorityAccount(marketAuthority).
+		SetMarketListingAccount(marketListing).
+		SetMarketListingTokenAccountAccount(marketListingTokenAccount).
+		SetNftMintAccount(nftMint.PublicKey()).
+		SetPrice(1).
+		SetRentAccount(solana.SysVarRentPubkey).
+		SetSellerAccount(oracle.PublicKey()).
+		SetSellerMarketTokenAccountAccount(sellerMarketTokenAccountAddress).
+		SetSellerNftTokenAccountAccount(userTokenAccountAddress).
+		SetSystemProgramAccount(solana.SystemProgramID).
+		SetTokenProgramAccount(solana.TokenProgramID)
+
+	err = listIx.Validate()
+	if err != nil {
+		panic(err)
+	}
+
+	sendTx(
+		"list",
+		append(instructions, listIx.Build()),
+		append(make([]solana.PrivateKey, 0), oracle, nftMint),
+		oracle.PublicKey(),
+	)
+
+}
+
+func verifyMarketList() {
+	oracle, err := solana.PrivateKeyFromSolanaKeygenFile("./oracle.key")
+	if err != nil {
+		panic(err)
+	}
+	marketUid := solana.MustPublicKeyFromBase58("GAm4cGVVMi5NMBVoxg8QhuKpQk2xW4BVbhnQrESE54HA")
+	marketAuthority, _ := GetMarketAuthority(oracle.PublicKey(), marketUid)
+	marketAuthorityData := GetMarketAuthorityData(marketAuthority)
+	i := uint64(0)
+	for i < marketAuthorityData.Listings {
+		marketListing, _ := GetMarketListing(marketAuthority, i)
+		GetMarketListingData(marketListing)
+		i++
+	}
+
+}
+
+func marketFulfill() {
+	marketUid := solana.MustPublicKeyFromBase58("GAm4cGVVMi5NMBVoxg8QhuKpQk2xW4BVbhnQrESE54HA")
+	oracle, err := solana.PrivateKeyFromSolanaKeygenFile("./oracle.key")
+	if err != nil {
+		panic(err)
+	}
+	buyer, err := solana.PrivateKeyFromSolanaKeygenFile("./burner.key")
+	if err != nil {
+		panic(err)
+	}
+	marketAuthority, marketAuthorityBump := GetMarketAuthority(oracle.PublicKey(), marketUid)
+	// marketAuthorityData := GetMarketAuthorityData(marketAuthority)
+	marketListing, _ := GetMarketListing(marketAuthority, 1)
+	marketListingData := GetMarketListingData(marketListing)
+	marketMint := solana.MustPublicKeyFromBase58("3BXFE7LYyx4XcVN2rip68idXc63pomwKfXgQaEP9cawx")
+	buyerMarketTokenAccountAddress, _ := getTokenWallet(buyer.PublicKey(), marketMint)
+	buyerNftTokenAccountAddress, _ := getTokenWallet(buyer.PublicKey(), marketListingData.NftMint)
+
+	marketListingTokenAccount, _ := GetMarketListingTokenAccount(marketAuthority, marketListingData.Index)
+	var instructions []solana.Instruction
+	instructions = append(instructions,
+		atok.NewCreateInstructionBuilder().
+			SetPayer(buyer.PublicKey()).
+			SetWallet(buyer.PublicKey()).
+			SetMint(marketListingData.NftMint).
+			Build(),
+	)
+	listIx := someplace.NewFulfillMarketListingInstructionBuilder().
+		SetBuyerAccount(buyer.PublicKey()).
+		SetBuyerMarketTokenAccountAccount(buyerMarketTokenAccountAddress).
+		SetBuyerNftTokenAccountAccount(buyerNftTokenAccountAddress).
+		SetMarketAuthorityAccount(marketAuthority).
+		SetMarketAuthorityBump(marketAuthorityBump).
+		SetMarketListingAccount(marketListing).
+		SetMarketListingTokenAccountAccount(marketListingTokenAccount).
+		SetNftMintAccount(marketListingData.NftMint).
+		SetOracleAccount(oracle.PublicKey()).
+		SetSellerMarketTokenAccountAccount(marketListingData.SellerMarketTokenAccount).
+		SetTokenProgramAccount(solana.TokenProgramID)
+
+	err = listIx.Validate()
+	if err != nil {
+		panic(err)
+	}
+
+	sendTx(
+		"list",
+		append(instructions, listIx.Build()),
+		append(make([]solana.PrivateKey, 0), oracle, buyer),
+		buyer.PublicKey(),
+	)
+
 }
 
 func verifyList() {
@@ -60,13 +261,13 @@ func list() {
 	if err != nil {
 		panic(err)
 	}
-	batch := solana.MustPublicKeyFromBase58("exiVcLT1yPJi2zwkP1pXSS5jSHKTV9UUq5tTtBW6AZW")
+	batch := solana.MustPublicKeyFromBase58("FF8YHotqqXG1q7wMghAz2NQS39wz2k6uaHcWxj1xV7LQ")
 	treasuryAuthority, _ := GetTreasuryAuthority(oracle.PublicKey())
 
-	listing, _ := GetListing(oracle.PublicKey(), batch, 0)
+	listing, _ := GetListing(oracle.PublicKey(), batch, 2)
 	listIx := someplace.NewCreateListingInstructionBuilder().
 		SetBatchAccount(batch).
-		SetConfigIndex(0).
+		SetConfigIndex(2).
 		SetLifecycleStart(0).
 		SetListingAccount(listing).
 		SetOracleAccount(oracle.PublicKey()).
@@ -175,7 +376,7 @@ func treasureCMs() {
 	)
 }
 func treasure() {
-	mint := solana.MustPublicKeyFromBase58("FWTYueaTkvBZg9xjonEhXXjhq1pqW7C1t2iZK4qCzmZ2")
+	mint := solana.MustPublicKeyFromBase58("3BXFE7LYyx4XcVN2rip68idXc63pomwKfXgQaEP9cawx")
 	oracle, err := solana.PrivateKeyFromSolanaKeygenFile("./oracle.key")
 	if err != nil {
 		panic(err)
@@ -186,7 +387,7 @@ func treasure() {
 	treasuryIx := someplace.NewInitTreasuryInstructionBuilder().
 		SetAdornment("fedcoin").
 		SetOracleAccount(oracle.PublicKey()).
-		SetOracleTokenAccountAccount(solana.MustPublicKeyFromBase58("AffpkV2mrnT82JeM6eTQrTsQm8SQ2M6z46pbGSFcBvxQ")).
+		SetOracleTokenAccountAccount(solana.MustPublicKeyFromBase58("AfaHA73mAsdFh4ie79smiLFsA5Zm1DCxfWQbd7pBBt7y")).
 		SetRentAccount(solana.SysVarRentPubkey).
 		SetSystemProgramAccount(solana.SystemProgramID).
 		SetTokenProgramAccount(solana.TokenProgramID).
@@ -230,7 +431,7 @@ func treasureVerify() {
 
 func burn() {
 
-	mint := solana.MustPublicKeyFromBase58("FWTYueaTkvBZg9xjonEhXXjhq1pqW7C1t2iZK4qCzmZ2")
+	mint := solana.MustPublicKeyFromBase58("3BXFE7LYyx4XcVN2rip68idXc63pomwKfXgQaEP9cawx")
 	oracle, err := solana.PrivateKeyFromSolanaKeygenFile("./dev.key")
 	if err != nil {
 		panic(err)
@@ -437,7 +638,7 @@ func mint() {
 		SetTokenMetadataProgramAccount(token_metadata.ProgramID).
 		SetTokenProgramAccount(token.ProgramID).
 		SetListingAccount(listing).
-		SetInitializerTokenAccountAccount(solana.MustPublicKeyFromBase58("AffpkV2mrnT82JeM6eTQrTsQm8SQ2M6z46pbGSFcBvxQ")).
+		SetInitializerTokenAccountAccount(solana.MustPublicKeyFromBase58("AfaHA73mAsdFh4ie79smiLFsA5Zm1DCxfWQbd7pBBt7y")).
 		SetSystemProgramAccount(system.ProgramID).
 		SetRentAccount(solana.SysVarRentPubkey).
 		SetClockAccount(solana.SysVarClockPubkey).
@@ -841,5 +1042,88 @@ func getMasterEdition(mint solana.PublicKey) (solana.PublicKey, error) {
 		token_metadata.ProgramID,
 	)
 	return addr, err
+}
+
+func GetMarketAuthority(oracle, marketUid solana.PublicKey) (solana.PublicKey, uint8) {
+	addr, bump, _ := solana.FindProgramAddress(
+		[][]byte{
+			[]byte("someplace"),
+			[]byte("market"),
+			oracle.Bytes(),
+			marketUid.Bytes(),
+		},
+		someplace.ProgramID,
+	)
+	return addr, bump
+}
+
+func GetMarketAuthorityData(marketAuthority solana.PublicKey) *someplace.Market {
+	rpcClient := rpc.New("https://sparkling-dark-shadow.solana-devnet.quiknode.pro/0e9964e4d70fe7f856e7d03bc7e41dc6a2b84452/")
+	batchReceiptBin, _ := rpcClient.GetAccountInfo(context.TODO(), marketAuthority)
+	var batchReceiptData someplace.Market
+	fmt.Println(batchReceiptBin.Value)
+	if batchReceiptBin != nil {
+		decoder := ag_binary.NewBorshDecoder(batchReceiptBin.Value.Data.GetBinary())
+		err := batchReceiptData.UnmarshalWithDecoder(decoder)
+		if err != nil {
+			panic(err)
+		}
+
+		formatAsJson(batchReceiptData)
+	}
+
+	return &batchReceiptData
+
+}
+
+/*
+   seeds = [PREFIX.as_ref(), LISTING.as_ref(), market_authority.key().as_ref(), market_authority.listings.to_le_bytes().as_ref()],
+   seeds = [PREFIX.as_ref(), LISTINGTOKEN.as_ref(), market_authority.key().as_ref(), index.to_le_bytes().as_ref()],
+*/
+func GetMarketListing(marketAuthority solana.PublicKey, index uint64) (solana.PublicKey, uint8) {
+	buf := make([]byte, 8)
+	binary.LittleEndian.PutUint64(buf, index)
+	addr, bump, _ := solana.FindProgramAddress(
+		[][]byte{
+			[]byte("someplace"),
+			[]byte("publiclisting"),
+			marketAuthority.Bytes(),
+			buf,
+		},
+		someplace.ProgramID,
+	)
+	return addr, bump
+}
+func GetMarketListingData(marketListing solana.PublicKey) *someplace.MarketListing {
+	rpcClient := rpc.New("https://sparkling-dark-shadow.solana-devnet.quiknode.pro/0e9964e4d70fe7f856e7d03bc7e41dc6a2b84452/")
+	batchReceiptBin, _ := rpcClient.GetAccountInfo(context.TODO(), marketListing)
+	var batchReceiptData someplace.MarketListing
+	fmt.Println(batchReceiptBin.Value)
+	if batchReceiptBin != nil {
+		decoder := ag_binary.NewBorshDecoder(batchReceiptBin.Value.Data.GetBinary())
+		err := batchReceiptData.UnmarshalWithDecoder(decoder)
+		if err != nil {
+			panic(err)
+		}
+
+		formatAsJson(batchReceiptData)
+	}
+
+	return &batchReceiptData
+
+}
+func GetMarketListingTokenAccount(marketAuthority solana.PublicKey, index uint64) (solana.PublicKey, uint8) {
+	buf := make([]byte, 8)
+	binary.LittleEndian.PutUint64(buf, index)
+	addr, bump, _ := solana.FindProgramAddress(
+		[][]byte{
+			[]byte("someplace"),
+			[]byte("listingtoken"),
+			marketAuthority.Bytes(),
+			buf,
+		},
+		someplace.ProgramID,
+	)
+	return addr, bump
 }
 

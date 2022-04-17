@@ -12,8 +12,8 @@ import (
 
 // AddWhitelistedCm is the `addWhitelistedCm` instruction.
 type AddWhitelistedCm struct {
-	CandyMachine        *ag_solanago.PublicKey
 	CandyMachineCreator *ag_solanago.PublicKey
+	CandyMachine        *ag_solanago.PublicKey
 
 	// [0] = [WRITE] treasuryWhitelist
 	//
@@ -33,15 +33,15 @@ func NewAddWhitelistedCmInstructionBuilder() *AddWhitelistedCm {
 	return nd
 }
 
-// SetCandyMachine sets the "candyMachine" parameter.
-func (inst *AddWhitelistedCm) SetCandyMachine(candyMachine ag_solanago.PublicKey) *AddWhitelistedCm {
-	inst.CandyMachine = &candyMachine
-	return inst
-}
-
 // SetCandyMachineCreator sets the "candyMachineCreator" parameter.
 func (inst *AddWhitelistedCm) SetCandyMachineCreator(candyMachineCreator ag_solanago.PublicKey) *AddWhitelistedCm {
 	inst.CandyMachineCreator = &candyMachineCreator
+	return inst
+}
+
+// SetCandyMachine sets the "candyMachine" parameter.
+func (inst *AddWhitelistedCm) SetCandyMachine(candyMachine ag_solanago.PublicKey) *AddWhitelistedCm {
+	inst.CandyMachine = &candyMachine
 	return inst
 }
 
@@ -109,11 +109,11 @@ func (inst AddWhitelistedCm) ValidateAndBuild() (*Instruction, error) {
 func (inst *AddWhitelistedCm) Validate() error {
 	// Check whether all (required) parameters are set:
 	{
-		if inst.CandyMachine == nil {
-			return errors.New("CandyMachine parameter is not set")
-		}
 		if inst.CandyMachineCreator == nil {
 			return errors.New("CandyMachineCreator parameter is not set")
+		}
+		if inst.CandyMachine == nil {
+			return errors.New("CandyMachine parameter is not set")
 		}
 	}
 
@@ -145,8 +145,8 @@ func (inst *AddWhitelistedCm) EncodeToTree(parent ag_treeout.Branches) {
 
 					// Parameters of the instruction:
 					instructionBranch.Child("Params[len=2]").ParentFunc(func(paramsBranch ag_treeout.Branches) {
-						paramsBranch.Child(ag_format.Param("       CandyMachine", *inst.CandyMachine))
 						paramsBranch.Child(ag_format.Param("CandyMachineCreator", *inst.CandyMachineCreator))
+						paramsBranch.Child(ag_format.Param("       CandyMachine", *inst.CandyMachine))
 					})
 
 					// Accounts of the instruction:
@@ -161,26 +161,26 @@ func (inst *AddWhitelistedCm) EncodeToTree(parent ag_treeout.Branches) {
 }
 
 func (obj AddWhitelistedCm) MarshalWithEncoder(encoder *ag_binary.Encoder) (err error) {
-	// Serialize `CandyMachine` param:
-	err = encoder.Encode(obj.CandyMachine)
+	// Serialize `CandyMachineCreator` param:
+	err = encoder.Encode(obj.CandyMachineCreator)
 	if err != nil {
 		return err
 	}
-	// Serialize `CandyMachineCreator` param:
-	err = encoder.Encode(obj.CandyMachineCreator)
+	// Serialize `CandyMachine` param:
+	err = encoder.Encode(obj.CandyMachine)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 func (obj *AddWhitelistedCm) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err error) {
-	// Deserialize `CandyMachine`:
-	err = decoder.Decode(&obj.CandyMachine)
+	// Deserialize `CandyMachineCreator`:
+	err = decoder.Decode(&obj.CandyMachineCreator)
 	if err != nil {
 		return err
 	}
-	// Deserialize `CandyMachineCreator`:
-	err = decoder.Decode(&obj.CandyMachineCreator)
+	// Deserialize `CandyMachine`:
+	err = decoder.Decode(&obj.CandyMachine)
 	if err != nil {
 		return err
 	}
@@ -190,16 +190,16 @@ func (obj *AddWhitelistedCm) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (e
 // NewAddWhitelistedCmInstruction declares a new AddWhitelistedCm instruction with the provided parameters and accounts.
 func NewAddWhitelistedCmInstruction(
 	// Parameters:
-	candyMachine ag_solanago.PublicKey,
 	candyMachineCreator ag_solanago.PublicKey,
+	candyMachine ag_solanago.PublicKey,
 	// Accounts:
 	treasuryWhitelist ag_solanago.PublicKey,
 	oracle ag_solanago.PublicKey,
 	treasuryAuthority ag_solanago.PublicKey,
 	systemProgram ag_solanago.PublicKey) *AddWhitelistedCm {
 	return NewAddWhitelistedCmInstructionBuilder().
-		SetCandyMachine(candyMachine).
 		SetCandyMachineCreator(candyMachineCreator).
+		SetCandyMachine(candyMachine).
 		SetTreasuryWhitelistAccount(treasuryWhitelist).
 		SetOracleAccount(oracle).
 		SetTreasuryAuthorityAccount(treasuryAuthority).
