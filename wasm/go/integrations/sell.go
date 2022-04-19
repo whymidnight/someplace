@@ -8,6 +8,8 @@ import (
 	"fmt"
 	ag_binary "github.com/gagliardetto/binary"
 	token_metadata "github.com/gagliardetto/metaplex-go/clients/token-metadata"
+	atok "github.com/gagliardetto/solana-go/programs/associated-token-account"
+	"strconv"
 	"strings"
 	"syscall/js"
 
@@ -78,9 +80,48 @@ func SellCommit(this js.Value, args []js.Value) interface{} {
 	return promiseConstructor.New(handler)
 }
 
+func MarketList(this js.Value, args []js.Value) interface{} {
+	holder := solana.MustPublicKeyFromBase58(args[0].String())
+	oracle := solana.MustPublicKeyFromBase58(args[1].String())
+	marketUid := solana.MustPublicKeyFromBase58(args[2].String())
+	nftMint := solana.MustPublicKeyFromBase58(args[3].String())
+	price, priceError := strconv.Atoi(args[4].String())
+
+	handler := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+
+		go func() {
+			if priceError != nil {
+				errorConstructor := js.Global().Get("Error")
+				errorObject := errorConstructor.New("unauthorized")
+				reject.Invoke(errorObject)
+				return
+			}
+			listTx, err := marketList(holder, oracle, marketUid, nftMint, uint64(price))
+			if err != nil {
+				errorConstructor := js.Global().Get("Error")
+				errorObject := errorConstructor.New("unauthorized")
+				reject.Invoke(errorObject)
+				return
+			}
+
+			dst := js.Global().Get("Uint8Array").New(len(listTx))
+			js.CopyBytesToJS(dst, listTx)
+
+			resolve.Invoke(dst)
+		}()
+
+		return nil
+	})
+
+	promiseConstructor := js.Global().Get("Promise")
+	return promiseConstructor.New(handler)
+}
+
 func nfts(holder, oracle solana.PublicKey) ([]byte, error) {
 	treasuryAuthority, _ := GetTreasuryAuthority(oracle)
-	client := rpc.New("https://sparkling-dark-shadow.solana-devnet.quiknode.pro/0e9964e4d70fe7f856e7d03bc7e41dc6a2b84452/")
+	client := rpc.New(NETWORK)
 	tokenAccounts, err := client.GetTokenAccountsByOwner(context.TODO(), holder, &rpc.GetTokenAccountsConfig{ProgramId: &solana.TokenProgramID}, &rpc.GetTokenAccountsOpts{Encoding: "jsonParsed"})
 	if err != nil {
 		return []byte{}, err
@@ -169,7 +210,7 @@ func burn(holder, mint, oracle solana.PublicKey) ([]byte, error) {
 	treasuryMint := GetTreasuryAuthorityData(treasuryAuthority).TreasuryMint
 	treasuryTokenAccount, _ := GetTreasuryTokenAccount(oracle)
 	fmt.Println(mint)
-	client := rpc.New("https://sparkling-dark-shadow.solana-devnet.quiknode.pro/0e9964e4d70fe7f856e7d03bc7e41dc6a2b84452/")
+	client := rpc.New(NETWORK)
 	tokenAccounts, err := client.GetTokenAccountsByOwner(context.TODO(), holder, &rpc.GetTokenAccountsConfig{ProgramId: &solana.TokenProgramID}, &rpc.GetTokenAccountsOpts{Encoding: "jsonParsed"})
 	if err != nil {
 		fmt.Println("bad0")
@@ -327,4 +368,66 @@ func GetTreasuryTokenAccount(oracle solana.PublicKey) (solana.PublicKey, uint8) 
 		someplace.ProgramID,
 	)
 	return addr, bump
+}
+
+func marketList(holder, oracle, marketUid, nftMint solana.PublicKey, price uint64) ([]byte, error) {
+	marketAuthority, _ := GetMarketAuthority(oracle, marketUid)
+	marketAuthorityData := GetMarketAuthorityData(marketAuthority)
+	marketMint := marketAuthorityData.MarketMint
+
+	sellerTokenAccountAddress, _ := getTokenWallet(holder, nftMint)
+	sellerMarketTokenAccountAddress, _ := getTokenWallet(holder, marketMint)
+
+	marketListing, _ := GetMarketListing(marketAuthority, marketAuthorityData.Listings)
+	marketListingTokenAccount, _ := GetMarketListingTokenAccount(marketAuthority, marketAuthorityData.Listings)
+	listIx := someplace.NewCreateMarketListingInstructionBuilder().
+		SetIndex(marketAuthorityData.Listings).
+		SetMarketAuthorityAccount(marketAuthority).
+		SetMarketListingAccount(marketListing).
+		SetMarketListingTokenAccountAccount(marketListingTokenAccount).
+		SetNftMintAccount(nftMint).
+		SetPrice(price).
+		SetRentAccount(solana.SysVarRentPubkey).
+		SetSellerAccount(holder).
+		SetSellerMarketTokenAccountAccount(sellerMarketTokenAccountAddress).
+		SetSellerNftTokenAccountAccount(sellerTokenAccountAddress).
+		SetSystemProgramAccount(solana.SystemProgramID).
+		SetTokenProgramAccount(solana.TokenProgramID)
+
+	err := listIx.Validate()
+	if err != nil {
+		return []byte{}, errors.New("bad")
+	}
+	var instructions []solana.Instruction
+	client := rpc.New(NETWORK)
+	tokenAccounts, err := client.GetTokenAccountsByOwner(context.TODO(), holder, &rpc.GetTokenAccountsConfig{Mint: &marketAuthorityData.MarketMint}, &rpc.GetTokenAccountsOpts{Encoding: "jsonParsed"})
+	if err != nil {
+		return []byte{}, errors.New("bad")
+	}
+	if len(tokenAccounts.Value) == 0 {
+		instructions = append(
+			instructions,
+			atok.NewCreateInstructionBuilder().
+				SetPayer(holder).
+				SetWallet(holder).
+				SetMint(marketMint).
+				Build(),
+		)
+	}
+	instructions = append(
+		instructions,
+		listIx.
+			Build(),
+	)
+
+	txBuilder := solana.NewTransactionBuilder()
+	for _, ix := range instructions {
+		txBuilder = txBuilder.AddInstruction(ix)
+	}
+	txB, _ := txBuilder.Build()
+	txJson, _ := json.MarshalIndent(txB, "", "  ")
+
+	fmt.Println(string(txJson))
+	return txJson, nil
+
 }

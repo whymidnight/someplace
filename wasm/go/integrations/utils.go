@@ -116,7 +116,7 @@ func getMetadata(mint solana.PublicKey) (solana.PublicKey, error) {
 	return addr, err
 }
 func GetTreasuryAuthorityData(treasuryAuthority solana.PublicKey) *someplace.TreasuryAuthority {
-	rpcClient := rpc.New("https://sparkling-dark-shadow.solana-devnet.quiknode.pro/0e9964e4d70fe7f856e7d03bc7e41dc6a2b84452/")
+	rpcClient := rpc.New(NETWORK)
 	batchesBin, _ := rpcClient.GetAccountInfo(context.TODO(), treasuryAuthority)
 	var batchesData someplace.TreasuryAuthority
 	decoder := ag_binary.NewBorshDecoder(batchesBin.Value.Data.GetBinary())

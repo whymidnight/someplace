@@ -309,11 +309,6 @@ declare interface InitOutput {
   readonly pubkey_createWithSeed: (a: number, b: number, c: number, d: number, e: number) => void;
   readonly pubkey_createProgramAddress: (a: number, b: number, c: number, d: number) => void;
   readonly pubkey_findProgramAddress: (a: number, b: number, c: number, d: number) => void;
-  readonly __wbg_message_free: (a: number) => void;
-  readonly __wbg_get_message_recent_blockhash: (a: number) => number;
-  readonly __wbg_set_message_recent_blockhash: (a: number, b: number) => void;
-  readonly init: () => void;
-  readonly __wbg_instruction_free: (a: number) => void;
   readonly systeminstruction_createAccount: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => number;
   readonly systeminstruction_createAccountWithSeed: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number) => number;
   readonly systeminstruction_assign: (a: number, b: number) => number;
@@ -326,6 +321,7 @@ declare interface InitOutput {
   readonly systeminstruction_advanceNonceAccount: (a: number, b: number) => number;
   readonly systeminstruction_withdrawNonceAccount: (a: number, b: number, c: number, d: number, e: number) => number;
   readonly systeminstruction_authorizeNonceAccount: (a: number, b: number, c: number) => number;
+  readonly __wbg_instruction_free: (a: number) => void;
   readonly __wbg_instructions_free: (a: number) => void;
   readonly instructions_constructor: () => number;
   readonly instructions_push: (a: number, b: number) => void;
@@ -335,15 +331,19 @@ declare interface InitOutput {
   readonly hash_toString: (a: number, b: number) => void;
   readonly hash_equals: (a: number, b: number) => number;
   readonly hash_toBytes: (a: number, b: number) => void;
+  readonly __wbg_message_free: (a: number) => void;
+  readonly __wbg_get_message_recent_blockhash: (a: number) => number;
+  readonly __wbg_set_message_recent_blockhash: (a: number, b: number) => void;
+  readonly init: () => void;
   readonly __wbindgen_malloc: (a: number) => number;
   readonly __wbindgen_realloc: (a: number, b: number, c: number) => number;
   readonly __wbindgen_export_2: WebAssembly.Table;
-  readonly _dyn_core__ops__function__FnMut_____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__hfaf49ab5fc6780f5: (a: number, b: number) => void;
-  readonly _dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__he6963332ae033bde: (a: number, b: number, c: number) => void;
+  readonly _dyn_core__ops__function__FnMut_____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__h2924d9b283b99c0e: (a: number, b: number) => void;
+  readonly _dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__h51cf90af102bd259: (a: number, b: number, c: number) => void;
   readonly __wbindgen_exn_store: (a: number) => void;
   readonly __wbindgen_add_to_stack_pointer: (a: number) => number;
   readonly __wbindgen_free: (a: number, b: number) => void;
-  readonly wasm_bindgen__convert__closures__invoke2_mut__hb65bafe0be241976: (a: number, b: number, c: number, d: number) => void;
+  readonly wasm_bindgen__convert__closures__invoke2_mut__h57f69b06e27a4d20: (a: number, b: number, c: number, d: number) => void;
 }
 
 /**

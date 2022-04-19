@@ -23,10 +23,19 @@ import (
 	atok "github.com/gagliardetto/solana-go/programs/associated-token-account"
 	"github.com/gagliardetto/solana-go/programs/system"
 	"github.com/gagliardetto/solana-go/rpc"
+	"io/ioutil"
+	"net/http"
 )
 
+const DEVNET = "https://sparkling-dark-shadow.solana-devnet.quiknode.pro/0e9964e4d70fe7f856e7d03bc7e41dc6a2b84452/"
+const TESTNET = "https://api.testnet.solana.com"
+const NETWORK = TESTNET
+const CDN = "https://triptychlabs.io:4445"
+
+var MINT = solana.MustPublicKeyFromBase58("9K9h3f5dEPyqEvaJ2kjNSbjwBq7j9ri1Bn8soF41J2w1")
+
 func init() {
-	someplace.SetProgramID(solana.MustPublicKeyFromBase58("5WwhzMCFSgWYxiuKrbsB9wtg9T49Mm1fD1v2UdhD5oYi"))
+	someplace.SetProgramID(solana.MustPublicKeyFromBase58("8otw5mCMUtwx91e7q7MAyhWoQVnc3Ng72qwDH58z72VW"))
 }
 
 func main() {
@@ -46,13 +55,15 @@ func main() {
 	// marketCreate()
 	// verifyMarketCreate()
 	// marketList()
-	verifyMarketList()
-	marketFulfill()
+	// verifyMarketList()
+	// marketFulfill()
 
+	// GetMarketMintMeta()
+	GetMarketListingsData()
 }
 
 func verifyMarketCreate() {
-	marketUid := solana.MustPublicKeyFromBase58("GAm4cGVVMi5NMBVoxg8QhuKpQk2xW4BVbhnQrESE54HA")
+	marketUid := solana.MustPublicKeyFromBase58("4Gm324iNEMapZV9aVyWg8EwJYLiqepYYab47sCWcPnh1")
 	oracle, err := solana.PrivateKeyFromSolanaKeygenFile("./oracle.key")
 	if err != nil {
 		panic(err)
@@ -63,8 +74,8 @@ func verifyMarketCreate() {
 }
 
 func marketCreate() {
-	marketUid := solana.MustPublicKeyFromBase58("GAm4cGVVMi5NMBVoxg8QhuKpQk2xW4BVbhnQrESE54HA")
-	mint := solana.MustPublicKeyFromBase58("3BXFE7LYyx4XcVN2rip68idXc63pomwKfXgQaEP9cawx")
+	marketUid := solana.MustPublicKeyFromBase58("4Gm324iNEMapZV9aVyWg8EwJYLiqepYYab47sCWcPnh1")
+	mint := MINT
 	oracle, err := solana.PrivateKeyFromSolanaKeygenFile("./oracle.key")
 	if err != nil {
 		panic(err)
@@ -95,7 +106,7 @@ func marketCreate() {
 
 func marketList() {
 	marketUid := solana.MustPublicKeyFromBase58("GAm4cGVVMi5NMBVoxg8QhuKpQk2xW4BVbhnQrESE54HA")
-	marketMint := solana.MustPublicKeyFromBase58("3BXFE7LYyx4XcVN2rip68idXc63pomwKfXgQaEP9cawx")
+	marketMint := MINT
 	oracle, err := solana.PrivateKeyFromSolanaKeygenFile("./oracle.key")
 	if err != nil {
 		panic(err)
@@ -107,7 +118,7 @@ func marketList() {
 	userTokenAccountAddress, _ := getTokenWallet(oracle.PublicKey(), nftMint.PublicKey())
 	sellerMarketTokenAccountAddress, _ := getTokenWallet(oracle.PublicKey(), marketMint)
 
-	client := rpc.New("https://sparkling-dark-shadow.solana-devnet.quiknode.pro/0e9964e4d70fe7f856e7d03bc7e41dc6a2b84452/")
+	client := rpc.New(NETWORK)
 	min, err := client.GetMinimumBalanceForRentExemption(context.TODO(), token.MINT_SIZE, rpc.CommitmentFinalized)
 	if err != nil {
 		panic(err)
@@ -205,7 +216,7 @@ func marketFulfill() {
 	// marketAuthorityData := GetMarketAuthorityData(marketAuthority)
 	marketListing, _ := GetMarketListing(marketAuthority, 1)
 	marketListingData := GetMarketListingData(marketListing)
-	marketMint := solana.MustPublicKeyFromBase58("3BXFE7LYyx4XcVN2rip68idXc63pomwKfXgQaEP9cawx")
+	marketMint := MINT
 	buyerMarketTokenAccountAddress, _ := getTokenWallet(buyer.PublicKey(), marketMint)
 	buyerNftTokenAccountAddress, _ := getTokenWallet(buyer.PublicKey(), marketListingData.NftMint)
 
@@ -261,17 +272,17 @@ func list() {
 	if err != nil {
 		panic(err)
 	}
-	batch := solana.MustPublicKeyFromBase58("FF8YHotqqXG1q7wMghAz2NQS39wz2k6uaHcWxj1xV7LQ")
+	batch := solana.MustPublicKeyFromBase58("92uRUkRgGoisXqT81kP3kWUJ1UroGdnXaV9DdURZLNRr")
 	treasuryAuthority, _ := GetTreasuryAuthority(oracle.PublicKey())
 
-	listing, _ := GetListing(oracle.PublicKey(), batch, 2)
+	listing, _ := GetListing(oracle.PublicKey(), batch, 0)
 	listIx := someplace.NewCreateListingInstructionBuilder().
 		SetBatchAccount(batch).
-		SetConfigIndex(2).
+		SetConfigIndex(0).
 		SetLifecycleStart(0).
 		SetListingAccount(listing).
 		SetOracleAccount(oracle.PublicKey()).
-		SetPrice(10000).
+		SetPrice(15).
 		SetSystemProgramAccount(solana.SystemProgramID).
 		SetTreasuryAuthorityAccount(treasuryAuthority)
 
@@ -294,7 +305,7 @@ func holder_nft_metadata() {
 	if err != nil {
 		panic(err)
 	}
-	client := rpc.New("https://sparkling-dark-shadow.solana-devnet.quiknode.pro/0e9964e4d70fe7f856e7d03bc7e41dc6a2b84452/")
+	client := rpc.New(NETWORK)
 	tokenAccounts, err := client.GetTokenAccountsByOwner(context.TODO(), oracle.PublicKey(), &rpc.GetTokenAccountsConfig{ProgramId: &solana.TokenProgramID}, &rpc.GetTokenAccountsOpts{Encoding: "jsonParsed"})
 	if err != nil {
 		panic(err)
@@ -357,7 +368,7 @@ func treasureCMs() {
 	}
 	treasuryAuthority, _ := GetTreasuryAuthority(oracle.PublicKey())
 
-	candyMachine := solana.MustPublicKeyFromBase58("exiVcLT1yPJi2zwkP1pXSS5jSHKTV9UUq5tTtBW6AZW")
+	candyMachine := solana.MustPublicKeyFromBase58("92uRUkRgGoisXqT81kP3kWUJ1UroGdnXaV9DdURZLNRr")
 	candyMachineCreator, _, _ := getCandyMachineCreator(candyMachine)
 	treasuryWhitelist, _ := GetTreasuryWhitelist(oracle.PublicKey(), treasuryAuthority, candyMachineCreator)
 	treasuryIx := someplace.NewAddWhitelistedCmInstructionBuilder().
@@ -376,18 +387,19 @@ func treasureCMs() {
 	)
 }
 func treasure() {
-	mint := solana.MustPublicKeyFromBase58("3BXFE7LYyx4XcVN2rip68idXc63pomwKfXgQaEP9cawx")
+	mint := MINT
 	oracle, err := solana.PrivateKeyFromSolanaKeygenFile("./oracle.key")
 	if err != nil {
 		panic(err)
 	}
 	treasuryAuthority, _ := GetTreasuryAuthority(oracle.PublicKey())
 	treasuryTokenAccount, _ := GetTreasuryTokenAccount(oracle.PublicKey())
+	oracleTokenAccount, _ := getTokenWallet(oracle.PublicKey(), MINT)
 
 	treasuryIx := someplace.NewInitTreasuryInstructionBuilder().
 		SetAdornment("fedcoin").
 		SetOracleAccount(oracle.PublicKey()).
-		SetOracleTokenAccountAccount(solana.MustPublicKeyFromBase58("AfaHA73mAsdFh4ie79smiLFsA5Zm1DCxfWQbd7pBBt7y")).
+		SetOracleTokenAccountAccount(oracleTokenAccount).
 		SetRentAccount(solana.SysVarRentPubkey).
 		SetSystemProgramAccount(solana.SystemProgramID).
 		SetTokenProgramAccount(solana.TokenProgramID).
@@ -431,13 +443,13 @@ func treasureVerify() {
 
 func burn() {
 
-	mint := solana.MustPublicKeyFromBase58("3BXFE7LYyx4XcVN2rip68idXc63pomwKfXgQaEP9cawx")
+	mint := MINT
 	oracle, err := solana.PrivateKeyFromSolanaKeygenFile("./dev.key")
 	if err != nil {
 		panic(err)
 	}
 
-	client := rpc.New("https://sparkling-dark-shadow.solana-devnet.quiknode.pro/0e9964e4d70fe7f856e7d03bc7e41dc6a2b84452/")
+	client := rpc.New(NETWORK)
 	tokenAccounts, err := client.GetTokenAccountsByOwner(context.TODO(), oracle.PublicKey(), &rpc.GetTokenAccountsConfig{ProgramId: &solana.TokenProgramID}, &rpc.GetTokenAccountsOpts{Encoding: "jsonParsed"})
 	if err != nil {
 		panic(err)
@@ -551,7 +563,7 @@ func mint() {
 
 	mint := solana.NewWallet().PrivateKey
 
-	client := rpc.New("https://sparkling-dark-shadow.solana-devnet.quiknode.pro/0e9964e4d70fe7f856e7d03bc7e41dc6a2b84452/")
+	client := rpc.New(NETWORK)
 	userTokenAccountAddress, err := getTokenWallet(oracle.PublicKey(), mint.PublicKey())
 	if err != nil {
 		panic(err)
@@ -772,7 +784,7 @@ func verifyBatchUpload() {
 
 func GetTreasuryWhitelistData(treasuryAuthority solana.PublicKey) *someplace.TreasuryWhitelist {
 	fmt.Println(someplace.ProgramID)
-	rpcClient := rpc.New("https://sparkling-dark-shadow.solana-devnet.quiknode.pro/0e9964e4d70fe7f856e7d03bc7e41dc6a2b84452/")
+	rpcClient := rpc.New(NETWORK)
 	batchesBin, _ := rpcClient.GetAccountInfo(context.TODO(), treasuryAuthority)
 	fmt.Println("....", batchesBin)
 	var batchesData someplace.TreasuryWhitelist
@@ -789,7 +801,7 @@ func GetTreasuryWhitelistData(treasuryAuthority solana.PublicKey) *someplace.Tre
 }
 func GetTreasuryAuthorityData(treasuryAuthority solana.PublicKey) *someplace.TreasuryAuthority {
 	fmt.Println(someplace.ProgramID)
-	rpcClient := rpc.New("https://sparkling-dark-shadow.solana-devnet.quiknode.pro/0e9964e4d70fe7f856e7d03bc7e41dc6a2b84452/")
+	rpcClient := rpc.New(NETWORK)
 	batchesBin, _ := rpcClient.GetAccountInfo(context.TODO(), treasuryAuthority)
 	var batchesData someplace.TreasuryAuthority
 	decoder := ag_binary.NewBorshDecoder(batchesBin.Value.Data.GetBinary())
@@ -804,7 +816,7 @@ func GetTreasuryAuthorityData(treasuryAuthority solana.PublicKey) *someplace.Tre
 
 }
 func GetBatchesData(batches solana.PublicKey) *someplace.Batches {
-	rpcClient := rpc.New("https://sparkling-dark-shadow.solana-devnet.quiknode.pro/0e9964e4d70fe7f856e7d03bc7e41dc6a2b84452/")
+	rpcClient := rpc.New(NETWORK)
 	batchesBin, _ := rpcClient.GetAccountInfo(context.TODO(), batches)
 	var batchesData someplace.Batches
 	decoder := ag_binary.NewBorshDecoder(batchesBin.Value.Data.GetBinary())
@@ -820,7 +832,7 @@ func GetBatchesData(batches solana.PublicKey) *someplace.Batches {
 }
 
 func GetBatchReceiptData(batchReceipt solana.PublicKey) *someplace.BatchReceipt {
-	rpcClient := rpc.New("https://sparkling-dark-shadow.solana-devnet.quiknode.pro/0e9964e4d70fe7f856e7d03bc7e41dc6a2b84452/")
+	rpcClient := rpc.New(NETWORK)
 	batchReceiptBin, _ := rpcClient.GetAccountInfo(context.TODO(), batchReceipt)
 	var batchReceiptData someplace.BatchReceipt
 	fmt.Println(batchReceiptBin.Value)
@@ -838,7 +850,7 @@ func GetBatchReceiptData(batchReceipt solana.PublicKey) *someplace.BatchReceipt 
 
 }
 func GetListingData(listing solana.PublicKey) *someplace.Listing {
-	rpcClient := rpc.New("https://sparkling-dark-shadow.solana-devnet.quiknode.pro/0e9964e4d70fe7f856e7d03bc7e41dc6a2b84452/")
+	rpcClient := rpc.New(NETWORK)
 	batchReceiptBin, _ := rpcClient.GetAccountInfo(context.TODO(), listing)
 	var batchReceiptData someplace.Listing
 	fmt.Println(batchReceiptBin.Value)
@@ -867,8 +879,8 @@ func sendTx(
 	signers []solana.PrivateKey,
 	feePayer solana.PublicKey,
 ) {
-	rpcClient := rpc.New("https://sparkling-dark-shadow.solana-devnet.quiknode.pro/0e9964e4d70fe7f856e7d03bc7e41dc6a2b84452/")
-	wsClient, err := ws.Connect(context.TODO(), "wss://api.devnet.solana.com")
+	rpcClient := rpc.New(NETWORK)
+	wsClient, err := ws.Connect(context.TODO(), "wss://api.testnet.solana.com")
 	if err != nil {
 		log.Println("PANIC!!!", fmt.Errorf("unable to open WebSocket Client - %w", err))
 	}
@@ -1058,7 +1070,7 @@ func GetMarketAuthority(oracle, marketUid solana.PublicKey) (solana.PublicKey, u
 }
 
 func GetMarketAuthorityData(marketAuthority solana.PublicKey) *someplace.Market {
-	rpcClient := rpc.New("https://sparkling-dark-shadow.solana-devnet.quiknode.pro/0e9964e4d70fe7f856e7d03bc7e41dc6a2b84452/")
+	rpcClient := rpc.New(NETWORK)
 	batchReceiptBin, _ := rpcClient.GetAccountInfo(context.TODO(), marketAuthority)
 	var batchReceiptData someplace.Market
 	fmt.Println(batchReceiptBin.Value)
@@ -1095,7 +1107,7 @@ func GetMarketListing(marketAuthority solana.PublicKey, index uint64) (solana.Pu
 	return addr, bump
 }
 func GetMarketListingData(marketListing solana.PublicKey) *someplace.MarketListing {
-	rpcClient := rpc.New("https://sparkling-dark-shadow.solana-devnet.quiknode.pro/0e9964e4d70fe7f856e7d03bc7e41dc6a2b84452/")
+	rpcClient := rpc.New(NETWORK)
 	batchReceiptBin, _ := rpcClient.GetAccountInfo(context.TODO(), marketListing)
 	var batchReceiptData someplace.MarketListing
 	fmt.Println(batchReceiptBin.Value)
@@ -1125,5 +1137,75 @@ func GetMarketListingTokenAccount(marketAuthority solana.PublicKey, index uint64
 		someplace.ProgramID,
 	)
 	return addr, bump
+}
+
+type TokenListMeta struct {
+	Address solana.PublicKey `json:"address"`
+	Symbol  string           `json:"symbol"`
+	Name    string           `json:"name"`
+}
+
+type TokenList struct {
+	Tokens []TokenListMeta `json:"tokens"`
+}
+
+func GetMarketMintMeta() {
+	marketUid := solana.MustPublicKeyFromBase58("4Gm324iNEMapZV9aVyWg8EwJYLiqepYYab47sCWcPnh1")
+	oracle, err := solana.PrivateKeyFromSolanaKeygenFile("./oracle.key")
+	if err != nil {
+		panic(err)
+	}
+	marketAuthority, _ := GetMarketAuthority(oracle.PublicKey(), marketUid)
+	marketAuthorityData := GetMarketAuthorityData(marketAuthority)
+
+	var tokenMeta TokenListMeta
+	tokens := FetchTokenMeta()
+	for _, token := range tokens {
+		if token.Address.Equals(marketAuthorityData.MarketMint) {
+			tokenMeta = token
+		}
+	}
+
+	fmt.Println(tokenMeta)
+}
+
+func FetchTokenMeta() []TokenListMeta {
+	var tokenList TokenList
+	tokenListUrl := fmt.Sprint(CDN + "/solana.tokenlist.json")
+	res, err := http.DefaultClient.Get(tokenListUrl)
+	if err != nil {
+		return tokenList.Tokens
+	}
+	defer res.Body.Close()
+
+	data, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return tokenList.Tokens
+	}
+
+	err = json.Unmarshal(data, &tokenList)
+	if err != nil {
+		return tokenList.Tokens
+	}
+
+	return tokenList.Tokens
+
+}
+
+func GetMarketListingsData() {
+	oracle, err := solana.PrivateKeyFromSolanaKeygenFile("./oracle.key")
+	if err != nil {
+		panic(err)
+	}
+	marketUid := solana.MustPublicKeyFromBase58("4Gm324iNEMapZV9aVyWg8EwJYLiqepYYab47sCWcPnh1")
+	marketAuthority, _ := GetMarketAuthority(oracle.PublicKey(), marketUid)
+	marketAuthorityData := GetMarketAuthorityData(marketAuthority)
+	var i uint64 = 0
+	for i < marketAuthorityData.Listings {
+		batchReceipt, _ := GetMarketListing(marketAuthority, i)
+		GetMarketListingData(batchReceipt)
+
+		i++
+	}
 }
 

@@ -27,7 +27,7 @@ pub mod ix_accounts;
 pub mod state;
 pub mod structs;
 
-declare_id!("5WwhzMCFSgWYxiuKrbsB9wtg9T49Mm1fD1v2UdhD5oYi");
+declare_id!("8otw5mCMUtwx91e7q7MAyhWoQVnc3Ng72qwDH58z72VW");
 
 #[program]
 pub mod someplace {
@@ -66,6 +66,7 @@ pub mod someplace {
         market_listing.price =
             (price as f64 * 10_usize.pow(market_authority.market_decimals as u32) as f64) as u64;
         market_listing.fulfilled = 0;
+        market_listing.listed_at = Clock::get()?.unix_timestamp as u64;
 
         market_authority.listings += 1;
 
@@ -122,7 +123,7 @@ pub mod someplace {
             market_listing.price,
         )?;
 
-        market_listing.fulfilled = 1;
+        market_listing.fulfilled = Clock::get()?.unix_timestamp as u64;
 
         Ok(())
     }
@@ -208,19 +209,11 @@ pub mod someplace {
         let oracle = &ctx.accounts.oracle;
         let authority = &mut ctx.accounts.treasury_authority;
         let whitelist = &mut ctx.accounts.treasury_whitelist;
-        // let whitelist_receipt = &mut ctx.accounts.treasury_whitelist_receipt;
         whitelist.whitelist_id = authority.whitelists;
         whitelist.candy_machine_id = candy_machine;
         whitelist.candy_machine_creator = candy_machine_creator;
         whitelist.treasury_authority = authority.key();
         whitelist.oracle = oracle.key();
-
-        /*
-        whitelist_receipt.whitelist_id = authority.whitelists;
-        whitelist_receipt.candy_machine_id = candy_machine;
-        whitelist_receipt.treasury_authority = authority.key();
-        whitelist_receipt.oracle = oracle.key();
-        */
 
         authority.whitelists += 1;
         Ok(())
@@ -234,11 +227,6 @@ pub mod someplace {
         {
             return Err(QuestError::SuspiciousTreasury.into());
         }
-        /*
-        if treasury_authority.treasury_mint.to_string() != treasury_mint.key().to_string() {
-            return Err(QuestError::SuspiciousTreasuryMint.into());
-        }
-        */
 
         let depo_mint = &mut ctx.accounts.depo_mint;
         let metadata =

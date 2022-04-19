@@ -112,9 +112,10 @@ pub struct MarketListing {
     pub seller_market_token_account: Pubkey,
     pub index: u64,
     pub price: u64,
-    pub fulfilled: u8,
+    pub listed_at: u64,
+    pub fulfilled: u64,
 }
 
 impl MarketListing {
-    pub const LEN: usize = 8 + 32 + 32 + 32 + 8 + 8 + 1;
+    pub const LEN: usize = 8 + 32 + 32 + 32 + 8 + 8 + 8 + 8;
 }

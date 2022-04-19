@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"syscall/js"
 
@@ -13,8 +14,6 @@ import (
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 )
-
-var programId = solana.MustPublicKeyFromBase58("5WwhzMCFSgWYxiuKrbsB9wtg9T49Mm1fD1v2UdhD5oYi")
 
 type batchReceiptsResponse struct {
 	BatchReceipt     solana.PublicKey
@@ -31,7 +30,6 @@ func FetchNfts(this js.Value, args []js.Value) interface{} {
 		go func() {
 
 			batches, _ := GetBatches(oracle)
-			fmt.Println(oracle.String(), batches, programId.String())
 			batchesData, err := GetBatchesData(batches)
 			if err != nil {
 				errorConstructor := js.Global().Get("Error")
@@ -95,7 +93,7 @@ func GetBatchReceipt(
 			oracle.Bytes(),
 			buf,
 		},
-		programId,
+		someplace.ProgramID,
 	)
 	return addr, bump
 }
@@ -107,15 +105,18 @@ func GetBatches(
 		[][]byte{
 			oracle.Bytes(),
 		},
-		programId,
+		someplace.ProgramID,
 	)
 	return addr, bump
 }
 
 func GetBatchesData(batches solana.PublicKey) (someplace.Batches, error) {
-	rpcClient := rpc.New("https://sparkling-dark-shadow.solana-devnet.quiknode.pro/0e9964e4d70fe7f856e7d03bc7e41dc6a2b84452/")
-	batchesBin, _ := rpcClient.GetAccountInfo(context.TODO(), batches)
+	rpcClient := rpc.New(NETWORK)
 	var batchesData someplace.Batches
+	batchesBin, _ := rpcClient.GetAccountInfo(context.TODO(), batches)
+	if batchesBin == nil {
+		return batchesData, errors.New("empty")
+	}
 	decoder := ag_binary.NewBorshDecoder(batchesBin.Value.Data.GetBinary())
 	err := batchesData.UnmarshalWithDecoder(decoder)
 	if err != nil {
@@ -127,9 +128,12 @@ func GetBatchesData(batches solana.PublicKey) (someplace.Batches, error) {
 }
 
 func GetBatchReceiptData(batchReceipt solana.PublicKey) (someplace.BatchReceipt, error) {
-	rpcClient := rpc.New("https://sparkling-dark-shadow.solana-devnet.quiknode.pro/0e9964e4d70fe7f856e7d03bc7e41dc6a2b84452/")
-	batchReceiptBin, _ := rpcClient.GetAccountInfo(context.TODO(), batchReceipt)
+	rpcClient := rpc.New(NETWORK)
 	var batchReceiptData someplace.BatchReceipt
+	batchReceiptBin, _ := rpcClient.GetAccountInfo(context.TODO(), batchReceipt)
+	if batchReceiptBin == nil {
+		return batchReceiptData, errors.New("empty")
+	}
 	decoder := ag_binary.NewBorshDecoder(batchReceiptBin.Value.Data.GetBinary())
 	err := batchReceiptData.UnmarshalWithDecoder(decoder)
 	if err != nil {

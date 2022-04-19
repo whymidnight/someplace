@@ -27,6 +27,23 @@ func main() {
 	defer buyFunc.Release()
 	global.Set("buy", buyFunc)
 
+	marketMetaFunc := js.FuncOf(integrations.FetchMarketplaceMeta)
+	defer marketMetaFunc.Release()
+	global.Set("getMarketMeta", marketMetaFunc)
+
+	marketListFunc := js.FuncOf(integrations.MarketList)
+	defer marketListFunc.Release()
+	global.Set("marketListNft", marketListFunc)
+
+	//MarketListBuyables
+	marketListBuyablesFunc := js.FuncOf(integrations.MarketListBuyables)
+	defer marketListBuyablesFunc.Release()
+	global.Set("marketListBuyables", marketListBuyablesFunc)
+
+	//MarketBuy
+	marketBuyFunc := js.FuncOf(integrations.MarketBuy)
+	defer marketBuyFunc.Release()
+	global.Set("marketBuy", marketBuyFunc)
+
 	<-done
 }
-

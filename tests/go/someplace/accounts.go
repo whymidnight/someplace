@@ -680,7 +680,8 @@ type MarketListing struct {
 	SellerMarketTokenAccount ag_solanago.PublicKey
 	Index                    uint64
 	Price                    uint64
-	Fulfilled                uint8
+	ListedAt                 uint64
+	Fulfilled                uint64
 }
 
 var MarketListingDiscriminator = [8]byte{175, 123, 31, 97, 53, 211, 229, 16}
@@ -713,6 +714,11 @@ func (obj MarketListing) MarshalWithEncoder(encoder *ag_binary.Encoder) (err err
 	}
 	// Serialize `Price` param:
 	err = encoder.Encode(obj.Price)
+	if err != nil {
+		return err
+	}
+	// Serialize `ListedAt` param:
+	err = encoder.Encode(obj.ListedAt)
 	if err != nil {
 		return err
 	}
@@ -760,6 +766,11 @@ func (obj *MarketListing) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err 
 	}
 	// Deserialize `Price`:
 	err = decoder.Decode(&obj.Price)
+	if err != nil {
+		return err
+	}
+	// Deserialize `ListedAt`:
+	err = decoder.Decode(&obj.ListedAt)
 	if err != nil {
 		return err
 	}
