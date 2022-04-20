@@ -677,11 +677,12 @@ func (obj *Market) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err error) 
 type MarketListing struct {
 	MarketAuthority          ag_solanago.PublicKey
 	NftMint                  ag_solanago.PublicKey
+	Seller                   ag_solanago.PublicKey
 	SellerMarketTokenAccount ag_solanago.PublicKey
 	Index                    uint64
 	Price                    uint64
 	ListedAt                 uint64
-	Fulfilled                uint64
+	Fulfilled                int64
 }
 
 var MarketListingDiscriminator = [8]byte{175, 123, 31, 97, 53, 211, 229, 16}
@@ -699,6 +700,11 @@ func (obj MarketListing) MarshalWithEncoder(encoder *ag_binary.Encoder) (err err
 	}
 	// Serialize `NftMint` param:
 	err = encoder.Encode(obj.NftMint)
+	if err != nil {
+		return err
+	}
+	// Serialize `Seller` param:
+	err = encoder.Encode(obj.Seller)
 	if err != nil {
 		return err
 	}
@@ -751,6 +757,11 @@ func (obj *MarketListing) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err 
 	}
 	// Deserialize `NftMint`:
 	err = decoder.Decode(&obj.NftMint)
+	if err != nil {
+		return err
+	}
+	// Deserialize `Seller`:
+	err = decoder.Decode(&obj.Seller)
 	if err != nil {
 		return err
 	}

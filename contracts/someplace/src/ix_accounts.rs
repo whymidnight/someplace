@@ -118,6 +118,25 @@ pub struct FulfillMarketListing<'info> {
     pub oracle: UncheckedAccount<'info>,
     pub token_program: Program<'info, Token>,
 }
+#[derive(Accounts)]
+pub struct UnlistMarketListing<'info> {
+    #[account(mut)]
+    pub market_authority: Account<'info, Market>,
+    #[account(mut)]
+    pub market_listing: Account<'info, MarketListing>,
+    #[account(mut)]
+    pub market_listing_token_account: Account<'info, TokenAccount>,
+    #[account(mut)]
+    pub seller: Signer<'info>,
+    #[account(mut)]
+    pub nft_mint: Account<'info, Mint>,
+    #[account(mut)]
+    pub seller_nft_token_account: Box<Account<'info, TokenAccount>>,
+    #[account(mut)]
+    /// CHECK: !islazy && /s
+    pub oracle: UncheckedAccount<'info>,
+    pub token_program: Program<'info, Token>,
+}
 
 #[derive(Accounts)]
 pub struct InitTreasury<'info> {

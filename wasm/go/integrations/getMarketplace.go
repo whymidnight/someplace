@@ -47,9 +47,10 @@ func FetchMarketplaceMeta(this js.Value, args []js.Value) interface{} {
 }
 
 type TokenListMeta struct {
-	Address solana.PublicKey `json:"address"`
-	Symbol  string           `json:"symbol"`
-	Name    string           `json:"name"`
+	Address  solana.PublicKey `json:"address"`
+	Symbol   string           `json:"symbol"`
+	Name     string           `json:"name"`
+	Decimals uint8            `json:"decimals"`
 }
 
 type TokenList struct {
@@ -156,6 +157,7 @@ func GetMarketListingData(marketListing solana.PublicKey) *someplace.MarketListi
 		decoder := ag_binary.NewBorshDecoder(batchReceiptBin.Value.Data.GetBinary())
 		err := batchReceiptData.UnmarshalWithDecoder(decoder)
 		if err != nil {
+			fmt.Println(err)
 			return nil
 		}
 

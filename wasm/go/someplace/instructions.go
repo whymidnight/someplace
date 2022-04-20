@@ -32,6 +32,8 @@ var (
 
 	Instruction_FulfillMarketListing = ag_binary.TypeID([8]byte{171, 101, 117, 183, 127, 117, 107, 96})
 
+	Instruction_UnlistMarketListing = ag_binary.TypeID([8]byte{185, 12, 146, 92, 148, 242, 148, 229})
+
 	Instruction_CreateListing = ag_binary.TypeID([8]byte{18, 168, 45, 24, 191, 31, 117, 54})
 
 	Instruction_EnableBatchUploading = ag_binary.TypeID([8]byte{212, 38, 162, 41, 25, 159, 102, 80})
@@ -58,6 +60,8 @@ func InstructionIDToName(id ag_binary.TypeID) string {
 		return "CreateMarketListing"
 	case Instruction_FulfillMarketListing:
 		return "FulfillMarketListing"
+	case Instruction_UnlistMarketListing:
+		return "UnlistMarketListing"
 	case Instruction_CreateListing:
 		return "CreateListing"
 	case Instruction_EnableBatchUploading:
@@ -101,6 +105,9 @@ var InstructionImplDef = ag_binary.NewVariantDefinition(
 		},
 		{
 			"fulfill_market_listing", (*FulfillMarketListing)(nil),
+		},
+		{
+			"unlist_market_listing", (*UnlistMarketListing)(nil),
 		},
 		{
 			"create_listing", (*CreateListing)(nil),

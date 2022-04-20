@@ -109,13 +109,14 @@ impl Market {
 pub struct MarketListing {
     pub market_authority: Pubkey,
     pub nft_mint: Pubkey,
+    pub seller: Pubkey,
     pub seller_market_token_account: Pubkey,
     pub index: u64,
     pub price: u64,
     pub listed_at: u64,
-    pub fulfilled: u64,
+    pub fulfilled: i64,
 }
 
 impl MarketListing {
-    pub const LEN: usize = 8 + 32 + 32 + 32 + 8 + 8 + 8 + 8;
+    pub const LEN: usize = 8 + 32 + 32 + 32 + 32 + 8 + 8 + 8 + 8;
 }

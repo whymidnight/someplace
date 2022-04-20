@@ -45,5 +45,9 @@ func main() {
 	defer marketBuyFunc.Release()
 	global.Set("marketBuy", marketBuyFunc)
 
+	marketDelistFunc := js.FuncOf(integrations.MarketDelist)
+	defer marketDelistFunc.Release()
+	global.Set("marketDelist", marketDelistFunc)
+
 	<-done
 }

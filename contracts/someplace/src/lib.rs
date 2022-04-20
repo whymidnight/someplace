@@ -60,11 +60,11 @@ pub mod someplace {
             return Err(QuestError::SuspiciousTreasury.into());
         }
         market_listing.market_authority = market_authority.key();
+        market_listing.seller = seller.key();
         market_listing.seller_market_token_account = ctx.accounts.seller_market_token_account.key();
         market_listing.nft_mint = nft_mint.key();
         market_listing.index = index;
-        market_listing.price =
-            (price as f64 * 10_usize.pow(market_authority.market_decimals as u32) as f64) as u64;
+        market_listing.price = price;
         market_listing.fulfilled = 0;
         market_listing.listed_at = Clock::get()?.unix_timestamp as u64;
 
@@ -123,7 +123,51 @@ pub mod someplace {
             market_listing.price,
         )?;
 
-        market_listing.fulfilled = Clock::get()?.unix_timestamp as u64;
+        market_listing.fulfilled = Clock::get()?.unix_timestamp;
+
+        Ok(())
+    }
+    pub fn unlist_market_listing(
+        ctx: Context<UnlistMarketListing>,
+        market_authority_bump: u8,
+    ) -> ProgramResult {
+        let market_authority = &mut ctx.accounts.market_authority;
+        let market_listing = &mut ctx.accounts.market_listing;
+        let nft_mint = &mut ctx.accounts.nft_mint;
+        let market_listing_token_account = &mut ctx.accounts.market_listing_token_account;
+        let market_uid = market_authority.market_uid;
+        let oracle_key = ctx.accounts.oracle.key();
+        let market_authority_bump_bytes = market_authority_bump.to_le_bytes();
+        let seeds = &[
+            PREFIX.as_ref(),
+            MARKET.as_ref(),
+            oracle_key.as_ref(),
+            market_uid.as_ref(),
+            market_authority_bump_bytes.as_ref(),
+        ];
+        let market_authority_signer = &[&seeds[..]];
+        if market_listing.seller != ctx.accounts.seller.key() {
+            return Err(QuestError::SuspiciousTransaction.into());
+        }
+        if market_listing.nft_mint != nft_mint.key() {
+            return Err(QuestError::SuspiciousTransaction.into());
+        }
+
+        // send nft mint from market_authority ata to buyer ata
+        token::transfer(
+            CpiContext::new_with_signer(
+                ctx.accounts.token_program.to_account_info(),
+                Transfer {
+                    from: market_listing_token_account.to_account_info(),
+                    to: ctx.accounts.seller_nft_token_account.to_account_info(),
+                    authority: market_authority.to_account_info(),
+                },
+                market_authority_signer,
+            ),
+            (1 as f64 * 10_usize.pow(nft_mint.decimals as u32) as f64) as u64,
+        )?;
+
+        market_listing.fulfilled = -1;
 
         Ok(())
     }
