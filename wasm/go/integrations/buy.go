@@ -136,7 +136,7 @@ func mint(holder solana.PublicKey, candyMachineAddress solana.PublicKey, configI
 		return []byte{}, errors.New("bad")
 	}
 
-	candyMachineRaw, err := client.GetAccountInfo(context.TODO(), candyMachineAddress)
+	candyMachineRaw, err := client.GetAccountInfoWithOpts(context.TODO(), candyMachineAddress, &rpc.GetAccountInfoOpts{Commitment: "confirmed"})
 	if err != nil {
 		return []byte{}, errors.New("bad")
 	}
@@ -273,7 +273,7 @@ func GetMarketListingsData(oracle, marketUid solana.PublicKey) ([]byte, error) {
 		marketListing := GetMarketListingData(batchReceipt)
 		if marketListing != nil {
 			metadata, _ := getMetadata(marketListing.NftMint)
-			metadataAccount, err := client.GetAccountInfo(context.TODO(), metadata)
+			metadataAccount, err := client.GetAccountInfoWithOpts(context.TODO(), metadata, &rpc.GetAccountInfoOpts{Commitment: "confirmed"})
 			if err != nil {
 				i++
 				continue
@@ -307,7 +307,7 @@ func marketFulfill(buyer, oracle, marketUid solana.PublicKey, listingId uint64) 
 	buyerMarketTokenAccountAddress, _ := getTokenWallet(buyer, marketMint)
 	buyerNftTokenAccountAddress, _ := getTokenWallet(buyer, marketListingData.NftMint)
 	client := rpc.New(NETWORK)
-	tokenAccounts, err := client.GetTokenAccountsByOwner(context.TODO(), buyer, &rpc.GetTokenAccountsConfig{Mint: &marketListingData.NftMint}, &rpc.GetTokenAccountsOpts{Encoding: "jsonParsed"})
+	tokenAccounts, err := client.GetTokenAccountsByOwner(context.TODO(), buyer, &rpc.GetTokenAccountsConfig{Mint: &marketListingData.NftMint}, &rpc.GetTokenAccountsOpts{Encoding: "jsonParsed", Commitment: "confirmed"})
 
 	marketListingTokenAccount, _ := GetMarketListingTokenAccount(marketAuthority, marketListingData.Index)
 	var instructions []solana.Instruction

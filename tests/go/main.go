@@ -785,7 +785,7 @@ func verifyBatchUpload() {
 func GetTreasuryWhitelistData(treasuryAuthority solana.PublicKey) *someplace.TreasuryWhitelist {
 	fmt.Println(someplace.ProgramID)
 	rpcClient := rpc.New(NETWORK)
-	batchesBin, _ := rpcClient.GetAccountInfo(context.TODO(), treasuryAuthority)
+	batchesBin, _ := rpcClient.GetAccountInfoWithOpts(context.TODO(), treasuryAuthority, &rpc.GetAccountInfoOpts{Commitment: "confirmed"})
 	fmt.Println("....", batchesBin)
 	var batchesData someplace.TreasuryWhitelist
 	decoder := ag_binary.NewBorshDecoder(batchesBin.Value.Data.GetBinary())
@@ -802,7 +802,7 @@ func GetTreasuryWhitelistData(treasuryAuthority solana.PublicKey) *someplace.Tre
 func GetTreasuryAuthorityData(treasuryAuthority solana.PublicKey) *someplace.TreasuryAuthority {
 	fmt.Println(someplace.ProgramID)
 	rpcClient := rpc.New(NETWORK)
-	batchesBin, _ := rpcClient.GetAccountInfo(context.TODO(), treasuryAuthority)
+	batchesBin, _ := rpcClient.GetAccountInfoWithOpts(context.TODO(), treasuryAuthority, &rpc.GetAccountInfoOpts{Commitment: "confirmed"})
 	var batchesData someplace.TreasuryAuthority
 	decoder := ag_binary.NewBorshDecoder(batchesBin.Value.Data.GetBinary())
 	err := batchesData.UnmarshalWithDecoder(decoder)
@@ -817,7 +817,7 @@ func GetTreasuryAuthorityData(treasuryAuthority solana.PublicKey) *someplace.Tre
 }
 func GetBatchesData(batches solana.PublicKey) *someplace.Batches {
 	rpcClient := rpc.New(NETWORK)
-	batchesBin, _ := rpcClient.GetAccountInfo(context.TODO(), batches)
+	batchesBin, _ := rpcClient.GetAccountInfoWithOpts(context.TODO(), batches, &rpc.GetAccountInfoOpts{Commitment: "confirmed"})
 	var batchesData someplace.Batches
 	decoder := ag_binary.NewBorshDecoder(batchesBin.Value.Data.GetBinary())
 	err := batchesData.UnmarshalWithDecoder(decoder)
@@ -833,7 +833,7 @@ func GetBatchesData(batches solana.PublicKey) *someplace.Batches {
 
 func GetBatchReceiptData(batchReceipt solana.PublicKey) *someplace.BatchReceipt {
 	rpcClient := rpc.New(NETWORK)
-	batchReceiptBin, _ := rpcClient.GetAccountInfo(context.TODO(), batchReceipt)
+	batchReceiptBin, _ := rpcClient.GetAccountInfoWithOpts(context.TODO(), batchReceipt, &rpc.GetAccountInfoOpts{Commitment: "confirmed"})
 	var batchReceiptData someplace.BatchReceipt
 	fmt.Println(batchReceiptBin.Value)
 	if batchReceiptBin != nil {
@@ -851,7 +851,7 @@ func GetBatchReceiptData(batchReceipt solana.PublicKey) *someplace.BatchReceipt 
 }
 func GetListingData(listing solana.PublicKey) *someplace.Listing {
 	rpcClient := rpc.New(NETWORK)
-	batchReceiptBin, _ := rpcClient.GetAccountInfo(context.TODO(), listing)
+	batchReceiptBin, _ := rpcClient.GetAccountInfoWithOpts(context.TODO(), listing, &rpc.GetAccountInfoOpts{Commitment: "confirmed"})
 	var batchReceiptData someplace.Listing
 	fmt.Println(batchReceiptBin.Value)
 	if batchReceiptBin != nil {
@@ -1071,7 +1071,7 @@ func GetMarketAuthority(oracle, marketUid solana.PublicKey) (solana.PublicKey, u
 
 func GetMarketAuthorityData(marketAuthority solana.PublicKey) *someplace.Market {
 	rpcClient := rpc.New(NETWORK)
-	batchReceiptBin, _ := rpcClient.GetAccountInfo(context.TODO(), marketAuthority)
+	batchReceiptBin, _ := rpcClient.GetAccountInfoWithOpts(context.TODO(), marketAuthority, &rpc.GetAccountInfoOpts{Commitment: "confirmed"})
 	var batchReceiptData someplace.Market
 	fmt.Println(batchReceiptBin.Value)
 	if batchReceiptBin != nil {
@@ -1108,7 +1108,7 @@ func GetMarketListing(marketAuthority solana.PublicKey, index uint64) (solana.Pu
 }
 func GetMarketListingData(marketListing solana.PublicKey) *someplace.MarketListing {
 	rpcClient := rpc.New(NETWORK)
-	batchReceiptBin, _ := rpcClient.GetAccountInfo(context.TODO(), marketListing)
+	batchReceiptBin, _ := rpcClient.GetAccountInfoWithOpts(context.TODO(), marketListing, &rpc.GetAccountInfoOpts{Commitment: "confirmed"})
 	var batchReceiptData someplace.MarketListing
 	fmt.Println(batchReceiptBin.Value)
 	if batchReceiptBin != nil {

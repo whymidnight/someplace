@@ -117,7 +117,7 @@ func getMetadata(mint solana.PublicKey) (solana.PublicKey, error) {
 }
 func GetTreasuryAuthorityData(treasuryAuthority solana.PublicKey) *someplace.TreasuryAuthority {
 	rpcClient := rpc.New(NETWORK)
-	batchesBin, _ := rpcClient.GetAccountInfo(context.TODO(), treasuryAuthority)
+	batchesBin, _ := rpcClient.GetAccountInfoWithOpts(context.TODO(), treasuryAuthority, &rpc.GetAccountInfoOpts{Commitment: "confirmed"})
 	var batchesData someplace.TreasuryAuthority
 	decoder := ag_binary.NewBorshDecoder(batchesBin.Value.Data.GetBinary())
 	err := batchesData.UnmarshalWithDecoder(decoder)

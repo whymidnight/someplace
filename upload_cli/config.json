@@ -1,0 +1,25 @@
+{
+    "price": 1.0,
+    "number": 6,
+    "gatekeeper": null,
+    "solTreasuryAccount": "4nanNqSVDvJG8R6RF5GRVQaEF6iFuDTihU7RgYnGmtHQ",
+    "splTokenAccount": null,
+    "splToken": null,
+    "goLiveDate": "26 Feb 2022 12:49:00 PST",
+    "endSettings": null,
+    "whitelistMintSettings": {
+        "mode": { "deferCreator": true },
+        "mint": "22oCPvMmkAAzHheJCSVMCV3CrrsPWRrtnPsK2K6FrvQz",
+        "presale": false,
+        "discountPrice": 0.4
+    },
+    "hiddenSettings": null,
+    "storage": "nft-storage",
+    "ipfsInfuraProjectId": null,
+    "ipfsInfuraSecret": null,
+    "nftStorageKey": null,
+    "awsS3Bucket": null,
+    "noRetainAuthority": false,
+    "noMutable": false,
+    "arweaveJwk": null
+}

@@ -115,7 +115,7 @@ func GetMarketAuthority(oracle, marketUid solana.PublicKey) (solana.PublicKey, u
 
 func GetMarketAuthorityData(marketAuthority solana.PublicKey) *someplace.Market {
 	rpcClient := rpc.New(NETWORK)
-	batchReceiptBin, _ := rpcClient.GetAccountInfo(context.TODO(), marketAuthority)
+	batchReceiptBin, _ := rpcClient.GetAccountInfoWithOpts(context.TODO(), marketAuthority, &rpc.GetAccountInfoOpts{Commitment: "confirmed"})
 	var batchReceiptData someplace.Market
 	fmt.Println(batchReceiptBin.Value)
 	if batchReceiptBin != nil {
@@ -151,7 +151,7 @@ func GetMarketListing(marketAuthority solana.PublicKey, index uint64) (solana.Pu
 func GetMarketListingData(marketListing solana.PublicKey) *someplace.MarketListing {
 	var batchReceiptData someplace.MarketListing
 	rpcClient := rpc.New(NETWORK)
-	batchReceiptBin, _ := rpcClient.GetAccountInfo(context.TODO(), marketListing)
+	batchReceiptBin, _ := rpcClient.GetAccountInfoWithOpts(context.TODO(), marketListing, &rpc.GetAccountInfoOpts{Commitment: "confirmed"})
 	fmt.Println(batchReceiptBin.Value)
 	if batchReceiptBin != nil {
 		decoder := ag_binary.NewBorshDecoder(batchReceiptBin.Value.Data.GetBinary())

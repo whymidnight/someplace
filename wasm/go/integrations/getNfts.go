@@ -113,7 +113,7 @@ func GetBatches(
 func GetBatchesData(batches solana.PublicKey) (someplace.Batches, error) {
 	rpcClient := rpc.New(NETWORK)
 	var batchesData someplace.Batches
-	batchesBin, _ := rpcClient.GetAccountInfo(context.TODO(), batches)
+	batchesBin, _ := rpcClient.GetAccountInfoWithOpts(context.TODO(), batches, &rpc.GetAccountInfoOpts{Commitment: "confirmed"})
 	if batchesBin == nil {
 		return batchesData, errors.New("empty")
 	}
@@ -130,7 +130,7 @@ func GetBatchesData(batches solana.PublicKey) (someplace.Batches, error) {
 func GetBatchReceiptData(batchReceipt solana.PublicKey) (someplace.BatchReceipt, error) {
 	rpcClient := rpc.New(NETWORK)
 	var batchReceiptData someplace.BatchReceipt
-	batchReceiptBin, _ := rpcClient.GetAccountInfo(context.TODO(), batchReceipt)
+	batchReceiptBin, _ := rpcClient.GetAccountInfoWithOpts(context.TODO(), batchReceipt, &rpc.GetAccountInfoOpts{Commitment: "confirmed"})
 	if batchReceiptBin == nil {
 		return batchReceiptData, errors.New("empty")
 	}

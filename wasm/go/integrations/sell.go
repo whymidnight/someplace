@@ -192,7 +192,7 @@ func nfts(holder, oracle solana.PublicKey) ([]byte, error) {
 			if tokenData.Parsed.Info.TokenAmount.UiAmount == 1.0 {
 				nftMint := solana.MustPublicKeyFromBase58(tokenData.Parsed.Info.Mint)
 				metadata, _ := getMetadata(nftMint)
-				metadataAccount, err := client.GetAccountInfo(context.TODO(), metadata)
+				metadataAccount, err := client.GetAccountInfoWithOpts(context.TODO(), metadata, &rpc.GetAccountInfoOpts{Commitment: "confirmed"})
 				if err != nil {
 					continue
 				}
@@ -292,7 +292,7 @@ func burn(holder, mint, oracle solana.PublicKey) ([]byte, error) {
 					if tokenData.Parsed.Info.TokenAmount.UiAmount > 0 {
 						nftMint := solana.MustPublicKeyFromBase58(tokenData.Parsed.Info.Mint)
 						metadata, _ := getMetadata(nftMint)
-						metadataAccount, err := client.GetAccountInfo(context.TODO(), metadata)
+						metadataAccount, err := client.GetAccountInfoWithOpts(context.TODO(), metadata, &rpc.GetAccountInfoOpts{Commitment: "confirmed"})
 						if err != nil {
 							continue
 						}

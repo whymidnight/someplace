@@ -1,0 +1,65 @@
+{
+    "name": "Duck Hunter #63",
+    "symbol": "HUNT",
+    "description": "Watch out ducks!",
+    "seller_fee_basis_points": 500,
+    "image": "0.png",
+    "external_url": "https://thedapperducks.com/home",
+    "attributes": [
+        {
+            "trait_type": "Backgrounds",
+            "value": "Pond bg"
+        },
+        {
+            "trait_type": "Base",
+            "value": "Base hunter"
+        },
+        {
+            "trait_type": "Skin tones",
+            "value": "Dark skin"
+        },
+        {
+            "trait_type": "Beards",
+            "value": "Brown beard"
+        },
+        {
+            "trait_type": "Mouth",
+            "value": "None"
+        },
+        {
+            "trait_type": "Vests",
+            "value": "Blue vest"
+        },
+        {
+            "trait_type": "Sleeves",
+            "value": "White sleeves"
+        },
+        {
+            "trait_type": "Hats",
+            "value": "Grey hat"
+        },
+        {
+            "trait_type": "Eyes",
+            "value": "Looking down eyes"
+        }
+    ],
+    "collection": {
+        "name": "Dapper Ducks",
+        "family": "Duck Hunter"
+    },
+    "properties": {
+        "files": [
+            {
+                "uri": "image.png",
+                "type": "image/png"
+            }
+        ],
+        "category": "image",
+        "creators": [
+            {
+                "address": "F3ej3kCAB5zziRhXjrgScYgZpiHEd1WGUAB9ZGs4w5RK",
+                "share": 100
+            }
+        ]
+    }
+}
