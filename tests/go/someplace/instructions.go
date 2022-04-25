@@ -32,6 +32,8 @@ var (
 
 	Instruction_FulfillMarketListing = ag_binary.TypeID([8]byte{171, 101, 117, 183, 127, 117, 107, 96})
 
+	Instruction_UnlistMarketListing = ag_binary.TypeID([8]byte{185, 12, 146, 92, 148, 242, 148, 229})
+
 	Instruction_CreateListing = ag_binary.TypeID([8]byte{18, 168, 45, 24, 191, 31, 117, 54})
 
 	Instruction_EnableBatchUploading = ag_binary.TypeID([8]byte{212, 38, 162, 41, 25, 159, 102, 80})
@@ -49,6 +51,8 @@ var (
 	Instruction_InitializeCandyMachine = ag_binary.TypeID([8]byte{142, 137, 167, 107, 47, 39, 240, 124})
 
 	Instruction_MintNft = ag_binary.TypeID([8]byte{211, 57, 6, 167, 15, 219, 35, 251})
+
+	Instruction_MintNftRarity = ag_binary.TypeID([8]byte{56, 162, 100, 81, 69, 67, 107, 212})
 )
 
 // InstructionIDToName returns the name of the instruction given its ID.
@@ -58,6 +62,8 @@ func InstructionIDToName(id ag_binary.TypeID) string {
 		return "CreateMarketListing"
 	case Instruction_FulfillMarketListing:
 		return "FulfillMarketListing"
+	case Instruction_UnlistMarketListing:
+		return "UnlistMarketListing"
 	case Instruction_CreateListing:
 		return "CreateListing"
 	case Instruction_EnableBatchUploading:
@@ -76,6 +82,8 @@ func InstructionIDToName(id ag_binary.TypeID) string {
 		return "InitializeCandyMachine"
 	case Instruction_MintNft:
 		return "MintNft"
+	case Instruction_MintNftRarity:
+		return "MintNftRarity"
 	default:
 		return ""
 	}
@@ -103,6 +111,9 @@ var InstructionImplDef = ag_binary.NewVariantDefinition(
 			"fulfill_market_listing", (*FulfillMarketListing)(nil),
 		},
 		{
+			"unlist_market_listing", (*UnlistMarketListing)(nil),
+		},
+		{
 			"create_listing", (*CreateListing)(nil),
 		},
 		{
@@ -128,6 +139,9 @@ var InstructionImplDef = ag_binary.NewVariantDefinition(
 		},
 		{
 			"mint_nft", (*MintNft)(nil),
+		},
+		{
+			"mint_nft_rarity", (*MintNftRarity)(nil),
 		},
 	},
 )

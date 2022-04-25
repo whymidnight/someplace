@@ -281,3 +281,49 @@ pub struct MintNFT<'info> {
     #[account(mut)]
     pub initializer_token_account: Box<Account<'info, TokenAccount>>,
 }
+
+/// Mint a new NFT pseudo-randomly from the config array.
+#[derive(Accounts)]
+#[instruction(creator_bump: u8)]
+pub struct MintNFTRarity<'info> {
+    pub listing: Box<Account<'info, Listing>>,
+    #[account(
+    mut,
+    has_one = oracle
+    )]
+    pub candy_machine: Account<'info, Batch>,
+    #[account(seeds=[PREFIX.as_ref(), candy_machine.key().as_ref()], bump=creator_bump)]
+    /// CHECK: legacy
+    pub candy_machine_creator: UncheckedAccount<'info>,
+    pub payer: Signer<'info>,
+    #[account(mut)]
+    /// CHECK: legacy
+    pub oracle: UncheckedAccount<'info>,
+    #[account(mut)]
+    /// CHECK: legacy
+    pub metadata: UncheckedAccount<'info>,
+    #[account(mut)]
+    /// CHECK: legacy
+    pub mint: UncheckedAccount<'info>,
+    pub mint_authority: Signer<'info>,
+    pub update_authority: Signer<'info>,
+    #[account(mut)]
+    /// CHECK: legacy
+    pub master_edition: UncheckedAccount<'info>,
+    #[account(address = mpl_token_metadata::id())]
+    /// CHECK: legacy
+    pub token_metadata_program: UncheckedAccount<'info>,
+    pub token_program: Program<'info, Token>,
+    pub system_program: Program<'info, System>,
+    pub rent: Sysvar<'info, Rent>,
+    pub clock: Sysvar<'info, Clock>,
+    #[account(address = sysvar::instructions::id())]
+    /// CHECK: legacy
+    pub instruction_sysvar_account: UncheckedAccount<'info>,
+    #[account(mut)]
+    pub treasury_token_account: Box<Account<'info, TokenAccount>>,
+    #[account(mut)]
+    pub initializer_token_account: Box<Account<'info, TokenAccount>>,
+    /// CHECK: legacy
+    pub recent_blockhashes: UncheckedAccount<'info>,
+}

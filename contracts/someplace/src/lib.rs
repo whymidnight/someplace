@@ -9,6 +9,8 @@ use anchor_lang::Discriminator;
 use anchor_spl::token::{self, Burn, Transfer};
 use mpl_token_metadata::state::{MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH};
 
+use anchor_lang::solana_program::slot_hashes::SlotHashes;
+
 use std::str::FromStr;
 
 use anchor_lang::solana_program::{
@@ -488,6 +490,185 @@ pub mod someplace {
 
         // ensures valid listing for item in batch
         if listing.oracle != ctx.accounts.oracle.key() {
+            return Err(QuestError::SuspiciousTransaction.into());
+        }
+        if listing.batch != candy_machine.key() {
+            return Err(QuestError::SuspiciousTransaction.into());
+        }
+        if listing.config_index != config_index {
+            return Err(QuestError::SuspiciousTransaction.into());
+        }
+
+        if listing.lifecycle_start > Clock::get()?.unix_timestamp as u64 {
+            return Err(QuestError::SuspiciousTransaction.into());
+        }
+
+        // assert_valid_go_live(payer, clock, candy_machine)?;
+
+        let config_line = get_config_line(&candy_machine, config_index as usize)?;
+
+        let cm_key = candy_machine.key();
+        let authority_seeds = [PREFIX, cm_key.as_ref(), &[creator_bump]];
+
+        let mut creators: Vec<mpl_token_metadata::state::Creator> =
+            vec![mpl_token_metadata::state::Creator {
+                address: candy_machine_creator.key(),
+                verified: true,
+                share: 0,
+            }];
+
+        for c in &candy_machine.data.creators {
+            creators.push(mpl_token_metadata::state::Creator {
+                address: c.address,
+                verified: false,
+                share: c.share,
+            });
+        }
+
+        let metadata_infos = vec![
+            ctx.accounts.metadata.to_account_info(),
+            ctx.accounts.mint.to_account_info(),
+            ctx.accounts.mint_authority.to_account_info(),
+            ctx.accounts.payer.to_account_info(),
+            ctx.accounts.token_metadata_program.to_account_info(),
+            ctx.accounts.token_program.to_account_info(),
+            ctx.accounts.system_program.to_account_info(),
+            ctx.accounts.rent.to_account_info(),
+            candy_machine_creator.to_account_info(),
+        ];
+
+        let master_edition_infos = vec![
+            ctx.accounts.master_edition.to_account_info(),
+            ctx.accounts.mint.to_account_info(),
+            ctx.accounts.mint_authority.to_account_info(),
+            ctx.accounts.payer.to_account_info(),
+            ctx.accounts.metadata.to_account_info(),
+            ctx.accounts.token_metadata_program.to_account_info(),
+            ctx.accounts.token_program.to_account_info(),
+            ctx.accounts.system_program.to_account_info(),
+            ctx.accounts.rent.to_account_info(),
+            candy_machine_creator.to_account_info(),
+        ];
+
+        invoke_signed(
+            &create_metadata_accounts(
+                *ctx.accounts.token_metadata_program.key,
+                *ctx.accounts.metadata.key,
+                *ctx.accounts.mint.key,
+                *ctx.accounts.mint_authority.key,
+                *ctx.accounts.payer.key,
+                candy_machine_creator.key(),
+                config_line.name,
+                candy_machine.data.symbol.clone(),
+                config_line.uri,
+                Some(creators),
+                candy_machine.data.seller_fee_basis_points,
+                true,
+                candy_machine.data.is_mutable,
+            ),
+            metadata_infos.as_slice(),
+            &[&authority_seeds],
+        )?;
+
+        invoke_signed(
+            &create_master_edition(
+                *ctx.accounts.token_metadata_program.key,
+                *ctx.accounts.master_edition.key,
+                *ctx.accounts.mint.key,
+                candy_machine_creator.key(),
+                *ctx.accounts.mint_authority.key,
+                *ctx.accounts.metadata.key,
+                *ctx.accounts.payer.key,
+                Some(candy_machine.data.max_supply),
+            ),
+            master_edition_infos.as_slice(),
+            &[&authority_seeds],
+        )?;
+
+        let mut new_update_authority = Some(candy_machine.oracle);
+
+        if !candy_machine.data.retain_authority {
+            new_update_authority = Some(ctx.accounts.update_authority.key());
+        }
+
+        invoke_signed(
+            &update_metadata_accounts(
+                *ctx.accounts.token_metadata_program.key,
+                *ctx.accounts.metadata.key,
+                candy_machine_creator.key(),
+                new_update_authority,
+                None,
+                Some(true),
+            ),
+            &[
+                ctx.accounts.token_metadata_program.to_account_info(),
+                ctx.accounts.metadata.to_account_info(),
+                candy_machine_creator.to_account_info(),
+            ],
+            &[&authority_seeds],
+        )?;
+
+        let instruction_sysvar_account_info = instruction_sysvar_account.to_account_info();
+
+        let instruction_sysvar = instruction_sysvar_account_info.data.borrow();
+
+        let mut idx = 0;
+        let num_instructions =
+            read_u16(&mut idx, &instruction_sysvar).map_err(|_| QuestError::InvalidAccountData)?;
+
+        let associated_token =
+            Pubkey::from_str("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL").unwrap();
+
+        for index in 0..num_instructions {
+            let mut current = 2 + (index * 2) as usize;
+            let start = read_u16(&mut current, &instruction_sysvar).unwrap();
+
+            current = start as usize;
+            let num_accounts = read_u16(&mut current, &instruction_sysvar).unwrap();
+            current += (num_accounts as usize) * (1 + 32);
+            let program_id = read_pubkey(&mut current, &instruction_sysvar).unwrap();
+
+            if program_id != someplace::id()
+                && program_id != spl_token::id()
+                && program_id != anchor_lang::solana_program::system_program::ID
+                && program_id != associated_token
+            {
+                return Err(QuestError::SuspiciousTransaction.into());
+            }
+        }
+
+        let tender_cpx = Transfer {
+            from: ctx.accounts.initializer_token_account.to_account_info(),
+            to: ctx.accounts.treasury_token_account.to_account_info(),
+            authority: ctx.accounts.payer.to_account_info(),
+        };
+        let tender_cpx_context =
+            CpiContext::new(ctx.accounts.token_program.to_account_info(), tender_cpx);
+        token::transfer(tender_cpx_context, listing.price)?;
+
+        Ok(())
+    }
+
+    pub fn mint_nft_rarity<'info>(
+        ctx: Context<'_, '_, '_, 'info, MintNFTRarity<'info>>,
+        creator_bump: u8,
+        config_index: u64,
+    ) -> ProgramResult {
+        let listing = &mut ctx.accounts.listing;
+        let candy_machine = &mut ctx.accounts.candy_machine;
+        let candy_machine_creator = &ctx.accounts.candy_machine_creator;
+        let instruction_sysvar_account = &ctx.accounts.instruction_sysvar_account;
+        msg!("fail");
+
+        let recent_slothashes =
+            RecentBlockhashes::from_account_info(&ctx.accounts.recent_blockhashes)?;
+        msg!(
+            "{:?}",
+            recent_slothashes[0..2].iter().map(|slot| slot.blockhash)
+        );
+
+        // ensures valid listing for item in batch
+        if listing.oracle == ctx.accounts.oracle.key() {
             return Err(QuestError::SuspiciousTransaction.into());
         }
         if listing.batch != candy_machine.key() {

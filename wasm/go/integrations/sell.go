@@ -206,7 +206,7 @@ func nfts(holder, oracle solana.PublicKey) ([]byte, error) {
 				creators := *metadataData.Data.Creators
 				candyMachine := creators[0].Address
 				treasuryWhitelist, _ := GetTreasuryWhitelist(oracle, treasuryAuthority, candyMachine)
-				treasuryWhitelistAccount, err := client.GetAccountInfo(context.TODO(), treasuryWhitelist)
+				treasuryWhitelistAccount, err := client.GetAccountInfoWithOpts(context.TODO(), treasuryWhitelist, &rpc.GetAccountInfoOpts{Commitment: "confirmed"})
 				if err != nil {
 					continue
 				}

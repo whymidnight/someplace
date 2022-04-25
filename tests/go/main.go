@@ -49,6 +49,7 @@ func main() {
 	// treasureVerify()
 	// treasureVerifyCM()
 	// mint()
+	mintRare()
 	// holder_nft_metadata()
 	// burn()
 
@@ -59,7 +60,18 @@ func main() {
 	// marketFulfill()
 
 	// GetMarketMintMeta()
-	GetMarketListingsData()
+	// GetMarketListingsData()
+
+	public := solana.MustPublicKeyFromBase58("DdGbS9PZyxLwJLisa8a9tuTE7V3xJ9Hs6yRPmzzX75gF")
+	fmt.Println(getCandyMachineCreator(public))
+	fmt.Println([]byte("candy_machine"))
+
+	key := []byte{68, 100, 71, 98, 83, 57, 80, 90, 121, 120, 76, 119, 74, 76, 105, 115, 97, 56, 97, 57, 116, 117, 84, 69, 55, 86, 51, 120, 74, 57, 72, 115, 54, 121, 82, 80, 109, 122, 122, 88, 55, 53, 103, 70}
+	fmt.Println(len(key))
+	fmt.Println(solana.PublicKeyFromBytes(key))
+	fmt.Println(len(public.Bytes()))
+	fmt.Println(len("DdGbS9PZyxLwJLisa8a9tuTE7V3xJ9Hs6yRPmzzX75gF"))
+
 }
 
 func verifyMarketCreate() {
@@ -272,7 +284,7 @@ func list() {
 	if err != nil {
 		panic(err)
 	}
-	batch := solana.MustPublicKeyFromBase58("92uRUkRgGoisXqT81kP3kWUJ1UroGdnXaV9DdURZLNRr")
+	batch := solana.MustPublicKeyFromBase58("GTTXtoSYPhaH27tREZ6PZDvKsQMhaCrqyp7rPcTAzjtg")
 	treasuryAuthority, _ := GetTreasuryAuthority(oracle.PublicKey())
 
 	listing, _ := GetListing(oracle.PublicKey(), batch, 0)
@@ -673,6 +685,141 @@ func mint() {
 
 }
 
+func mintRare() {
+	candyMachineAddress := solana.MustPublicKeyFromBase58("GTTXtoSYPhaH27tREZ6PZDvKsQMhaCrqyp7rPcTAzjtg")
+
+	oracle, err := solana.PrivateKeyFromSolanaKeygenFile("./oracle.key")
+	if err != nil {
+		panic(err)
+	}
+
+	mint := solana.NewWallet().PrivateKey
+
+	client := rpc.New(NETWORK)
+	userTokenAccountAddress, err := getTokenWallet(oracle.PublicKey(), mint.PublicKey())
+	if err != nil {
+		panic(err)
+	}
+
+	candyMachineRaw, err := client.GetAccountInfo(context.TODO(), candyMachineAddress)
+	if err != nil {
+		panic(err)
+	}
+
+	signers := []solana.PrivateKey{mint, oracle}
+
+	min, err := client.GetMinimumBalanceForRentExemption(context.TODO(), token.MINT_SIZE, rpc.CommitmentFinalized)
+	if err != nil {
+		panic(err)
+	}
+
+	dec := ag_binary.NewBorshDecoder(candyMachineRaw.Value.Data.GetBinary())
+	var cm someplace.Batch
+	err = dec.Decode(&cm)
+	if err != nil {
+		panic(err)
+	}
+
+	var instructions []solana.Instruction
+	instructions = append(instructions,
+		system.NewCreateAccountInstructionBuilder().
+			SetOwner(token.ProgramID).
+			SetNewAccount(mint.PublicKey()).
+			SetSpace(token.MINT_SIZE).
+			SetFundingAccount(oracle.PublicKey()).
+			SetLamports(min).
+			Build(),
+
+		token.NewInitializeMint2InstructionBuilder().
+			SetMintAccount(mint.PublicKey()).
+			SetDecimals(0).
+			SetMintAuthority(oracle.PublicKey()).
+			SetFreezeAuthority(oracle.PublicKey()).
+			Build(),
+
+		atok.NewCreateInstructionBuilder().
+			SetPayer(oracle.PublicKey()).
+			SetWallet(oracle.PublicKey()).
+			SetMint(mint.PublicKey()).
+			Build(),
+
+		token.NewMintToInstructionBuilder().
+			SetMintAccount(mint.PublicKey()).
+			SetDestinationAccount(userTokenAccountAddress).
+			SetAuthorityAccount(oracle.PublicKey()).
+			SetAmount(1).
+			Build(),
+	)
+
+	metadataAddress, err := getMetadata(mint.PublicKey())
+	if err != nil {
+		panic(err)
+	}
+	masterEdition, err := getMasterEdition(mint.PublicKey())
+	if err != nil {
+		panic(err)
+	}
+	candyMachineCreator, creatorBump, err := getCandyMachineCreator(candyMachineAddress)
+	if err != nil {
+		panic(err)
+	}
+
+	listing, _ := GetListing(oracle.PublicKey(), candyMachineAddress, 0)
+	treasuryTokenAccount, _ := GetTreasuryTokenAccount(oracle.PublicKey())
+	mintIx := someplace.NewMintNftRarityInstructionBuilder().
+		SetConfigIndex(uint64(0)).
+		SetCreatorBump(creatorBump).
+		SetCandyMachineAccount(candyMachineAddress).
+		SetCandyMachineCreatorAccount(candyMachineCreator).
+		SetPayerAccount(oracle.PublicKey()).
+		SetOracleAccount(cm.Oracle).
+		SetMintAccount(mint.PublicKey()).
+		SetMetadataAccount(metadataAddress).
+		SetMasterEditionAccount(masterEdition).
+		SetMintAuthorityAccount(oracle.PublicKey()).
+		SetUpdateAuthorityAccount(oracle.PublicKey()).
+		SetTreasuryTokenAccountAccount(treasuryTokenAccount).
+		SetTokenMetadataProgramAccount(token_metadata.ProgramID).
+		SetTokenProgramAccount(token.ProgramID).
+		SetListingAccount(listing).
+		SetInitializerTokenAccountAccount(solana.MustPublicKeyFromBase58("CQ5mZ1Ve4CQK1vQenH1nAnHbyF3MNKavnu1MhJ2Dr4mx")).
+		SetSystemProgramAccount(system.ProgramID).
+		SetRentAccount(solana.SysVarRentPubkey).
+		SetClockAccount(solana.SysVarClockPubkey).
+		SetInstructionSysvarAccountAccount(solana.SysVarInstructionsPubkey).
+		SetRecentBlockhashesAccount(solana.SysVarRecentBlockHashesPubkey)
+
+	err = mintIx.Validate()
+	if err != nil {
+		panic(err)
+	}
+	for _ = range make([]int, 16) {
+		mintIx.AccountMetaSlice.Append(&solana.AccountMeta{
+			PublicKey:  solana.NewWallet().PublicKey(),
+			IsWritable: false,
+			IsSigner:   false,
+		})
+	}
+	/*
+		sendTx(
+			"mint",
+			instructions,
+			signers,
+			oracle.PublicKey(),
+		)
+	*/
+
+	sendTx(
+		"mint",
+		append(make([]solana.Instruction, 0),
+			mintIx.Build(),
+		),
+		signers,
+		oracle.PublicKey(),
+	)
+
+}
+
 func catalogBatches() {
 	oracle, err := solana.PrivateKeyFromSolanaKeygenFile("./oracle.key")
 	if err != nil {
@@ -916,12 +1063,14 @@ func sendTx(
 
 	tx.EncodeTree(text.NewTreeEncoder(os.Stdout, doc))
 
+	bin, _ := tx.MarshalBinary()
 	sig, err := sendAndConfirmTransaction.SendAndConfirmTransaction(
 		context.TODO(),
 		rpcClient,
 		wsClient,
 		tx,
 	)
+	fmt.Println(len(bin))
 	if err != nil {
 		log.Println("PANIC!!!", fmt.Errorf("unable to send transaction - %w", err))
 		return

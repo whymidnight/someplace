@@ -12,7 +12,7 @@ import (
 	ag_treeout "github.com/gagliardetto/treeout"
 )
 
-var ProgramID ag_solanago.PublicKey = ag_solanago.MustPublicKeyFromBase58("8otw5mCMUtwx91e7q7MAyhWoQVnc3Ng72qwDH58z72VW")
+var ProgramID ag_solanago.PublicKey
 
 func SetProgramID(pubkey ag_solanago.PublicKey) {
 	ProgramID = pubkey
@@ -51,6 +51,8 @@ var (
 	Instruction_InitializeCandyMachine = ag_binary.TypeID([8]byte{142, 137, 167, 107, 47, 39, 240, 124})
 
 	Instruction_MintNft = ag_binary.TypeID([8]byte{211, 57, 6, 167, 15, 219, 35, 251})
+
+	Instruction_MintNftRarity = ag_binary.TypeID([8]byte{56, 162, 100, 81, 69, 67, 107, 212})
 )
 
 // InstructionIDToName returns the name of the instruction given its ID.
@@ -80,6 +82,8 @@ func InstructionIDToName(id ag_binary.TypeID) string {
 		return "InitializeCandyMachine"
 	case Instruction_MintNft:
 		return "MintNft"
+	case Instruction_MintNftRarity:
+		return "MintNftRarity"
 	default:
 		return ""
 	}
@@ -135,6 +139,9 @@ var InstructionImplDef = ag_binary.NewVariantDefinition(
 		},
 		{
 			"mint_nft", (*MintNft)(nil),
+		},
+		{
+			"mint_nft_rarity", (*MintNftRarity)(nil),
 		},
 	},
 )

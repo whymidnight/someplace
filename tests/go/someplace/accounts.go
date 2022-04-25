@@ -682,7 +682,7 @@ type MarketListing struct {
 	Index                    uint64
 	Price                    uint64
 	ListedAt                 uint64
-	Fulfilled                uint64
+	Fulfilled                int64
 }
 
 var MarketListingDiscriminator = [8]byte{175, 123, 31, 97, 53, 211, 229, 16}
