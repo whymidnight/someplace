@@ -1042,19 +1042,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "77f3309417938f28bf8228fcff79a4a37103981e3e186d2ccd19c74b38f4eb71"
 
 [[package]]
-name = "example"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "clap",
- "rand 0.7.3",
- "sdk",
- "serde_json",
- "shellexpand",
- "solana-sdk",
-]
-
-[[package]]
 name = "failure"
 version = "0.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2586,6 +2573,23 @@ dependencies = [
  "spl-associated-token-account",
  "spl-token",
  "spl-token-metadata",
+]
+
+[[package]]
+name = "someplace_rusty"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "base64 0.13.0",
+ "clap",
+ "futures",
+ "rand 0.7.3",
+ "sdk",
+ "serde_json",
+ "shellexpand",
+ "solana-sdk",
+ "someplace",
+ "surf",
 ]
 
 [[package]]

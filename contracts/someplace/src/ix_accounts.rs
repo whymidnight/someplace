@@ -26,6 +26,22 @@ pub struct CreateListing<'info> {
 }
 
 #[derive(Accounts)]
+#[instruction(config_index: u64)]
+pub struct ModifyListing<'info> {
+    #[account(mut, has_one = oracle)]
+    pub batch: Account<'info, Batch>,
+    #[account(mut)]
+    pub oracle: Signer<'info>,
+    #[account(
+        seeds = [oracle.key().as_ref(), batch.key().as_ref(), config_index.to_le_bytes().as_ref()],
+        bump,
+    )]
+    pub listing: Account<'info, Listing>,
+    pub treasury_authority: Account<'info, TreasuryAuthority>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
 #[instruction(candy_machine_creator: Pubkey)]
 pub struct AddWhitelistedCM<'info> {
     #[account(
@@ -242,15 +258,25 @@ pub struct Sync<'info> {
 #[derive(Accounts)]
 #[instruction(creator_bump: u8)]
 pub struct MintNFT<'info> {
+    #[account(mut)]
     pub listing: Box<Account<'info, Listing>>,
+    #[account(
+        init,
+        seeds = [oracle.key().as_ref(), listing.key().as_ref(), listing.mints.to_le_bytes().as_ref()],
+        bump,
+        payer = payer,
+        space = MintHash::LEN
+    )]
+    pub mint_hash: Box<Account<'info, MintHash>>,
     #[account(
     mut,
     has_one = oracle
     )]
-    pub candy_machine: Account<'info, Batch>,
+    pub candy_machine: Box<Account<'info, Batch>>,
     #[account(seeds=[PREFIX.as_ref(), candy_machine.key().as_ref()], bump=creator_bump)]
     /// CHECK: legacy
     pub candy_machine_creator: UncheckedAccount<'info>,
+    #[account(mut)]
     pub payer: Signer<'info>,
     #[account(mut)]
     /// CHECK: legacy
@@ -286,7 +312,6 @@ pub struct MintNFT<'info> {
 #[derive(Accounts)]
 #[instruction(creator_bump: u8)]
 pub struct MintNFTRarity<'info> {
-    pub listing: Box<Account<'info, Listing>>,
     #[account(
     mut,
     has_one = oracle
@@ -305,8 +330,6 @@ pub struct MintNFTRarity<'info> {
     #[account(mut)]
     /// CHECK: legacy
     pub mint: UncheckedAccount<'info>,
-    pub mint_authority: Signer<'info>,
-    pub update_authority: Signer<'info>,
     #[account(mut)]
     /// CHECK: legacy
     pub master_edition: UncheckedAccount<'info>,
@@ -324,6 +347,9 @@ pub struct MintNFTRarity<'info> {
     pub treasury_token_account: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
     pub initializer_token_account: Box<Account<'info, TokenAccount>>,
+    #[account(mut)]
+    /// CHECK: legacy
+    pub nft_token_account: UncheckedAccount<'info>,
     /// CHECK: legacy
     pub recent_blockhashes: UncheckedAccount<'info>,
 }

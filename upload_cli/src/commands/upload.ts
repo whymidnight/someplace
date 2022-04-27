@@ -287,6 +287,7 @@ export async function uploadV2({
           try {
             switch (storage) {
               case StorageType.NftStorage:
+                console.log(manifest);
                 [link, imageLink, animationLink] = await nftStorageUpload(
                   image,
                   animation,
@@ -333,7 +334,9 @@ export async function uploadV2({
                 imageLink,
                 name: manifest.name,
                 onChain: false,
+                cardinality: manifest.cardinality,
               };
+              console.log("asdfasedfasdfasdf", cacheContent.items[asset.index]);
               saveCache(cacheName, env, cacheContent);
             }
           } finally {
@@ -392,6 +395,7 @@ type Manifest = {
   name: string;
   symbol: string;
   seller_fee_basis_points: number;
+  cardinality: string,
   properties: {
     files: Array<{ type: string; uri: string }>;
     creators: Array<{
@@ -525,6 +529,7 @@ async function writeIndices({
       index,
       configLines.map(i => ({
         uri: cacheContent.items[keys[i]].link,
+        cardinality: cacheContent.items[keys[i]].cardinality,
         name: cacheContent.items[keys[i]].name,
       })),
               {
@@ -683,6 +688,7 @@ export async function upload({
       for await (const value of arweaveBundleUploadGenerator) {
         const { cacheKeys, arweavePathManifestLinks, updatedManifests } = value;
 
+        console.log(updatedManifests);
         updateCacheAfterUpload(
           cache,
           cacheKeys,
@@ -762,6 +768,7 @@ export async function upload({
                     name: manifest.name,
                     onChain: false,
                   };
+
                   saveCache(cacheName, env, cache);
                 }
               } catch (err) {

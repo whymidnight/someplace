@@ -6,7 +6,7 @@ use crate::state::*;
 use crate::structs::*;
 use anchor_lang::prelude::*;
 use anchor_lang::Discriminator;
-use anchor_spl::token::{self, Burn, Transfer};
+use anchor_spl::token::{self, Burn, InitializeAccount, MintTo, Transfer};
 use mpl_token_metadata::state::{MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH};
 
 use anchor_lang::solana_program::slot_hashes::SlotHashes;
@@ -189,6 +189,37 @@ pub mod someplace {
             * 10_usize.pow(treasury_authority.treasury_decimals as u32) as f64)
             as u64;
         listing.lifecycle_start = lifecycle_start;
+        listing.is_listed = true;
+        listing.mints = 0;
+
+        Ok(())
+    }
+
+    pub fn modify_listing(
+        ctx: Context<ModifyListing>,
+        _config_index: u64,
+        is_listed: Option<bool>,
+        lifecycle_start: Option<u64>,
+        price: Option<u64>,
+    ) -> ProgramResult {
+        let listing = &mut ctx.accounts.listing;
+        let treasury_authority = &ctx.accounts.treasury_authority;
+        listing.treasury_authority = treasury_authority.key();
+        listing.batch = ctx.accounts.batch.key();
+        listing.oracle = ctx.accounts.oracle.key();
+
+        if let Some(is_listed_set) = is_listed {
+            listing.is_listed = is_listed_set;
+        }
+
+        if let Some(lifecycle_start_set) = lifecycle_start {
+            listing.lifecycle_start = lifecycle_start_set;
+        }
+        if let Some(price_set) = price {
+            listing.price = (price_set as f64
+                * 10_usize.pow(treasury_authority.treasury_decimals as u32) as f64)
+                as u64;
+        }
 
         Ok(())
     }
@@ -355,11 +386,22 @@ pub mod someplace {
             let name = line.name.clone() + std::str::from_utf8(&array_of_zeroes).unwrap();
 
             let mut array_of_zeroes = vec![];
+            while array_of_zeroes.len() < MAX_CARDINALITY_LENGTH - line.cardinality.len() {
+                array_of_zeroes.push(0u8);
+            }
+            let cardinality =
+                line.cardinality.clone() + std::str::from_utf8(&array_of_zeroes).unwrap();
+
+            let mut array_of_zeroes = vec![];
             while array_of_zeroes.len() < MAX_URI_LENGTH - line.uri.len() {
                 array_of_zeroes.push(0u8);
             }
             let uri = line.uri.clone() + std::str::from_utf8(&array_of_zeroes).unwrap();
-            fixed_config_lines.push(ConfigLine { name, uri })
+            fixed_config_lines.push(ConfigLine {
+                name,
+                cardinality,
+                uri,
+            })
         }
 
         let as_vec = fixed_config_lines.try_to_vec()?;
@@ -434,6 +476,7 @@ pub mod someplace {
         batch_receipt.batch_account = candy_machine_account.key();
         batch_receipt.oracle = ctx.accounts.oracle.key();
         batch_receipt.name = collection_name.to_string();
+        batch_receipt.items = data.items_available;
         batches.counter += 1;
 
         if data.uuid.len() != 6 {
@@ -484,9 +527,17 @@ pub mod someplace {
         config_index: u64,
     ) -> ProgramResult {
         let listing = &mut ctx.accounts.listing;
+        let mint_hash = &mut ctx.accounts.mint_hash;
         let candy_machine = &mut ctx.accounts.candy_machine;
         let candy_machine_creator = &ctx.accounts.candy_machine_creator;
         let instruction_sysvar_account = &ctx.accounts.instruction_sysvar_account;
+
+        mint_hash.mint = ctx.accounts.mint.key();
+        mint_hash.minter = ctx.accounts.payer.key();
+        mint_hash.mint_index = listing.mints;
+        mint_hash.fulfilled = Clock::get()?.unix_timestamp;
+
+        listing.mints += 1;
 
         // ensures valid listing for item in batch
         if listing.oracle != ctx.accounts.oracle.key() {
@@ -500,6 +551,10 @@ pub mod someplace {
         }
 
         if listing.lifecycle_start > Clock::get()?.unix_timestamp as u64 {
+            return Err(QuestError::SuspiciousTransaction.into());
+        }
+
+        if listing.is_listed != true {
             return Err(QuestError::SuspiciousTransaction.into());
         }
 
@@ -654,7 +709,6 @@ pub mod someplace {
         creator_bump: u8,
         config_index: u64,
     ) -> ProgramResult {
-        let listing = &mut ctx.accounts.listing;
         let candy_machine = &mut ctx.accounts.candy_machine;
         let candy_machine_creator = &ctx.accounts.candy_machine_creator;
         let instruction_sysvar_account = &ctx.accounts.instruction_sysvar_account;
@@ -663,24 +717,21 @@ pub mod someplace {
         let recent_slothashes =
             RecentBlockhashes::from_account_info(&ctx.accounts.recent_blockhashes)?;
         msg!(
-            "{:?}",
+            "{:?} - ortacle",
             recent_slothashes[0..2].iter().map(|slot| slot.blockhash)
         );
 
-        // ensures valid listing for item in batch
-        if listing.oracle == ctx.accounts.oracle.key() {
-            return Err(QuestError::SuspiciousTransaction.into());
-        }
-        if listing.batch != candy_machine.key() {
-            return Err(QuestError::SuspiciousTransaction.into());
-        }
-        if listing.config_index != config_index {
-            return Err(QuestError::SuspiciousTransaction.into());
-        }
-
-        if listing.lifecycle_start > Clock::get()?.unix_timestamp as u64 {
-            return Err(QuestError::SuspiciousTransaction.into());
-        }
+        token::mint_to(
+            CpiContext::new(
+                ctx.accounts.token_program.to_account_info(),
+                MintTo {
+                    mint: ctx.accounts.mint.to_account_info(),
+                    to: ctx.accounts.nft_token_account.to_account_info(),
+                    authority: ctx.accounts.payer.to_account_info(),
+                },
+            ),
+            1,
+        )?;
 
         // assert_valid_go_live(payer, clock, candy_machine)?;
 
@@ -707,7 +758,7 @@ pub mod someplace {
         let metadata_infos = vec![
             ctx.accounts.metadata.to_account_info(),
             ctx.accounts.mint.to_account_info(),
-            ctx.accounts.mint_authority.to_account_info(),
+            ctx.accounts.payer.to_account_info(),
             ctx.accounts.payer.to_account_info(),
             ctx.accounts.token_metadata_program.to_account_info(),
             ctx.accounts.token_program.to_account_info(),
@@ -719,7 +770,7 @@ pub mod someplace {
         let master_edition_infos = vec![
             ctx.accounts.master_edition.to_account_info(),
             ctx.accounts.mint.to_account_info(),
-            ctx.accounts.mint_authority.to_account_info(),
+            ctx.accounts.payer.to_account_info(),
             ctx.accounts.payer.to_account_info(),
             ctx.accounts.metadata.to_account_info(),
             ctx.accounts.token_metadata_program.to_account_info(),
@@ -734,7 +785,7 @@ pub mod someplace {
                 *ctx.accounts.token_metadata_program.key,
                 *ctx.accounts.metadata.key,
                 *ctx.accounts.mint.key,
-                *ctx.accounts.mint_authority.key,
+                *ctx.accounts.payer.key,
                 *ctx.accounts.payer.key,
                 candy_machine_creator.key(),
                 config_line.name,
@@ -755,7 +806,7 @@ pub mod someplace {
                 *ctx.accounts.master_edition.key,
                 *ctx.accounts.mint.key,
                 candy_machine_creator.key(),
-                *ctx.accounts.mint_authority.key,
+                *ctx.accounts.payer.key,
                 *ctx.accounts.metadata.key,
                 *ctx.accounts.payer.key,
                 Some(candy_machine.data.max_supply),
@@ -767,7 +818,7 @@ pub mod someplace {
         let mut new_update_authority = Some(candy_machine.oracle);
 
         if !candy_machine.data.retain_authority {
-            new_update_authority = Some(ctx.accounts.update_authority.key());
+            new_update_authority = Some(ctx.accounts.payer.key());
         }
 
         invoke_signed(
@@ -816,6 +867,7 @@ pub mod someplace {
             }
         }
 
+        /*
         let tender_cpx = Transfer {
             from: ctx.accounts.initializer_token_account.to_account_info(),
             to: ctx.accounts.treasury_token_account.to_account_info(),
@@ -824,7 +876,9 @@ pub mod someplace {
         let tender_cpx_context =
             CpiContext::new(ctx.accounts.token_program.to_account_info(), tender_cpx);
         token::transfer(tender_cpx_context, listing.price)?;
+        */
 
+        // Err(QuestError::SuspiciousTransaction.into())
         Ok(())
     }
 }

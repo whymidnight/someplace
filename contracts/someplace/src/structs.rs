@@ -68,5 +68,6 @@ pub struct CandyMachineData {
 #[derive(AnchorSerialize, AnchorDeserialize, Serialize, Deserialize, Debug)]
 pub struct ConfigLine {
     pub name: String,
+    pub cardinality: String,
     pub uri: String,
 }

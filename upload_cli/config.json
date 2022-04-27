@@ -7,12 +7,7 @@
     "splToken": null,
     "goLiveDate": "26 Feb 2022 12:49:00 PST",
     "endSettings": null,
-    "whitelistMintSettings": {
-        "mode": { "deferCreator": true },
-        "mint": "22oCPvMmkAAzHheJCSVMCV3CrrsPWRrtnPsK2K6FrvQz",
-        "presale": false,
-        "discountPrice": 0.4
-    },
+    "whitelistMintSettings": null,
     "hiddenSettings": null,
     "storage": "nft-storage",
     "ipfsInfuraProjectId": null,

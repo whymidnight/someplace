@@ -29,10 +29,11 @@ pub struct BatchReceipt {
     pub name: String,
     pub batch_account: Pubkey,
     pub oracle: Pubkey,
+    pub items: u64,
 }
 
 impl BatchReceipt {
-    pub const LEN: usize = 8 + 8 + 32 + 32 + 32;
+    pub const LEN: usize = 8 + 8 + 32 + 32 + 32 + 8;
 }
 
 #[account]
@@ -83,11 +84,12 @@ pub struct Listing {
     pub config_index: u64,
     pub price: u64,
     pub lifecycle_start: u64,
-    pub lifecycle_end: u64,
+    pub is_listed: bool,
+    pub mints: u64,
 }
 
 impl Listing {
-    pub const LEN: usize = 8 + 32 + 32 + 32 + 8 + 8 + 8 + 8;
+    pub const LEN: usize = 8 + 32 + 32 + 32 + 8 + 8 + 8 + 2 + 8;
 }
 
 #[account]
@@ -119,4 +121,16 @@ pub struct MarketListing {
 
 impl MarketListing {
     pub const LEN: usize = 8 + 32 + 32 + 32 + 32 + 8 + 8 + 8 + 8;
+}
+
+#[account]
+pub struct MintHash {
+    pub mint: Pubkey,
+    pub minter: Pubkey,
+    pub mint_index: u64,
+    pub fulfilled: i64,
+}
+
+impl MintHash {
+    pub const LEN: usize = 8 + 32 + 32 + 8 + 8;
 }

@@ -3,7 +3,10 @@ use mpl_token_metadata::state::{
 };
 
 // const DURATION: i64 = 60 * 5;
-pub const CONFIG_LINE_SIZE: usize = 4 + MAX_NAME_LENGTH + 4 + MAX_URI_LENGTH;
+// NAME[32] +
+pub const MAX_CARDINALITY_LENGTH: usize = 32;
+pub const CONFIG_LINE_SIZE: usize =
+    4 + MAX_NAME_LENGTH + 4 + MAX_CARDINALITY_LENGTH + 4 + MAX_URI_LENGTH;
 pub const CONFIG_ARRAY_START: usize = 8 + // key
     32 + // authority
     32 + //wallet

@@ -133,6 +133,7 @@ pub fn get_config_line<'info>(
         ..CONFIG_ARRAY_START + 4 + (index_to_use + 1) * (CONFIG_LINE_SIZE)];
 
     let mut name_vec = vec![];
+    let mut cardinality_vec = vec![];
     let mut uri_vec = vec![];
     for i in 4..4 + MAX_NAME_LENGTH {
         if data_array[i] == 0 {
@@ -140,7 +141,15 @@ pub fn get_config_line<'info>(
         }
         name_vec.push(data_array[i])
     }
-    for i in 8 + MAX_NAME_LENGTH..8 + MAX_NAME_LENGTH + MAX_URI_LENGTH {
+    for i in 8 + MAX_NAME_LENGTH..8 + MAX_NAME_LENGTH + MAX_CARDINALITY_LENGTH {
+        if data_array[i] == 0 {
+            break;
+        }
+        cardinality_vec.push(data_array[i])
+    }
+    for i in 8 + MAX_NAME_LENGTH + 4 + MAX_CARDINALITY_LENGTH
+        ..8 + MAX_CARDINALITY_LENGTH + MAX_NAME_LENGTH + MAX_URI_LENGTH
+    {
         if data_array[i] == 0 {
             break;
         }
@@ -148,6 +157,10 @@ pub fn get_config_line<'info>(
     }
     let config_line: ConfigLine = ConfigLine {
         name: match String::from_utf8(name_vec) {
+            Ok(val) => val,
+            Err(_) => return Err(QuestError::InvalidString.into()),
+        },
+        cardinality: match String::from_utf8(cardinality_vec) {
             Ok(val) => val,
             Err(_) => return Err(QuestError::InvalidString.into()),
         },
@@ -172,6 +185,7 @@ pub fn get_config_lines<'info>(
         ..CONFIG_ARRAY_START + 4 + (index_to_use + 1) * (CONFIG_LINE_SIZE)];
 
     let mut name_vec = vec![];
+    let mut cardinality_vec = vec![];
     let mut uri_vec = vec![];
     for i in 4..4 + MAX_NAME_LENGTH {
         if data_array[i] == 0 {
@@ -179,7 +193,15 @@ pub fn get_config_lines<'info>(
         }
         name_vec.push(data_array[i])
     }
-    for i in 8 + MAX_NAME_LENGTH..8 + MAX_NAME_LENGTH + MAX_URI_LENGTH {
+    for i in 8 + MAX_NAME_LENGTH..8 + MAX_NAME_LENGTH + MAX_CARDINALITY_LENGTH {
+        if data_array[i] == 0 {
+            break;
+        }
+        cardinality_vec.push(data_array[i])
+    }
+    for i in 8 + MAX_NAME_LENGTH + 4 + MAX_CARDINALITY_LENGTH
+        ..8 + MAX_CARDINALITY_LENGTH + MAX_NAME_LENGTH + MAX_URI_LENGTH
+    {
         if data_array[i] == 0 {
             break;
         }
@@ -187,6 +209,10 @@ pub fn get_config_lines<'info>(
     }
     let config_line: ConfigLine = ConfigLine {
         name: match String::from_utf8(name_vec) {
+            Ok(val) => val,
+            Err(_) => return Err(QuestError::InvalidString.into()),
+        },
+        cardinality: match String::from_utf8(cardinality_vec) {
             Ok(val) => val,
             Err(_) => return Err(QuestError::InvalidString.into()),
         },
@@ -215,3 +241,4 @@ pub fn assert_valid_metadata(
 
     Metadata::from_account_info(depo_metadata)
 }
+

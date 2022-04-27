@@ -4,3 +4,4 @@
 **/*.key
 **/node_modules
 **/.cache
+upload_cli/assets/**

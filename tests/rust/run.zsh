@@ -1,3 +1,3 @@
 #!/bin/zsh
 
-cargo run -- --candy-machine 8HmLSai2YV8dsg4VUY5mrxDCdXdGtaQYGMNCH42gzanT
+./target/debug/someplace_rusty --candy-machine BmroeEu5zY7KvRGo2FsQ2dJM7EkvnLNdAktzPxVWPb1b
