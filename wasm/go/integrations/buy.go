@@ -5,12 +5,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	ag_binary "github.com/gagliardetto/binary"
-	token_metadata "github.com/gagliardetto/metaplex-go/clients/token-metadata"
 	"strconv"
 	"syscall/js"
 
-	"creaturez.nft/wasm/v2/someplace"
+	ag_binary "github.com/gagliardetto/binary"
+	token_metadata "github.com/gagliardetto/metaplex-go/clients/token-metadata"
+
+	"creaturez.nft/someplace"
+	"creaturez.nft/someplace/storefront"
+	"creaturez.nft/utils"
 	"github.com/gagliardetto/solana-go"
 	atok "github.com/gagliardetto/solana-go/programs/associated-token-account"
 	"github.com/gagliardetto/solana-go/programs/system"
@@ -127,21 +130,9 @@ func MarketListBuyables(this js.Value, args []js.Value) interface{} {
 }
 
 func mint(holder solana.PublicKey, candyMachineAddress solana.PublicKey, configIndex int) ([]byte, error) {
-	mint := solana.NewWallet()
-	fmt.Println("wasm-mintKp", mint.PublicKey().String())
-
 	client := rpc.New(NETWORK)
-	userTokenAccountAddress, err := getTokenWallet(holder, mint.PublicKey())
-	if err != nil {
-		return []byte{}, errors.New("bad")
-	}
 
 	candyMachineRaw, err := client.GetAccountInfoWithOpts(context.TODO(), candyMachineAddress, &rpc.GetAccountInfoOpts{Commitment: "confirmed"})
-	if err != nil {
-		return []byte{}, errors.New("bad")
-	}
-
-	min, err := client.GetMinimumBalanceForRentExemption(context.TODO(), token.MINT_SIZE, rpc.CommitmentFinalized)
 	if err != nil {
 		return []byte{}, errors.New("bad")
 	}
@@ -154,41 +145,25 @@ func mint(holder solana.PublicKey, candyMachineAddress solana.PublicKey, configI
 	}
 
 	var instructions []solana.Instruction
-	instructions = append(instructions,
-		system.NewCreateAccountInstructionBuilder().
-			SetOwner(token.ProgramID).
-			SetNewAccount(mint.PublicKey()).
-			SetSpace(token.MINT_SIZE).
-			SetFundingAccount(holder).
-			SetLamports(min).
-			Build(),
+	treasuryAuthority, _ := GetTreasuryAuthority(cm.Oracle)
+	treasuryAuthorityData := GetTreasuryAuthorityData(treasuryAuthority)
+	if treasuryAuthorityData == nil {
+		fmt.Println("???????")
+		return []byte{}, errors.New("bad")
 
-		token.NewInitializeMint2InstructionBuilder().
-			SetMintAccount(mint.PublicKey()).
-			SetDecimals(0).
-			SetMintAuthority(holder).
-			SetFreezeAuthority(holder).
-			Build(),
-
-		atok.NewCreateInstructionBuilder().
-			SetPayer(holder).
-			SetWallet(holder).
-			SetMint(mint.PublicKey()).
-			Build(),
-
-		token.NewMintToInstructionBuilder().
-			SetMintAccount(mint.PublicKey()).
-			SetDestinationAccount(userTokenAccountAddress).
-			SetAuthorityAccount(holder).
-			SetAmount(1).
-			Build(),
-	)
-
-	metadataAddress, err := getMetadata(mint.PublicKey())
+	}
+	mintAta := solana.NewWallet()
+	listing, _ := GetListing(cm.Oracle, candyMachineAddress, uint64(configIndex))
+	listingData := storefront.GetListingData(listing)
+	mint, _, _ := storefront.GetMint(cm.Oracle, listing, listingData.Mints)
+	mintHash, _, _ := storefront.GetMintHash(cm.Oracle, listing, listingData.Mints)
+	initializerTokenAccount, err := utils.GetTokenWallet(holder, treasuryAuthorityData.TreasuryMint)
+	fmt.Println(cm.Oracle, cm.Name, treasuryAuthority, listing)
+	metadataAddress, err := getMetadata(mint)
 	if err != nil {
 		return []byte{}, errors.New("bad")
 	}
-	masterEdition, err := getMasterEdition(mint.PublicKey())
+	masterEdition, err := getMasterEdition(mint)
 	if err != nil {
 		return []byte{}, errors.New("bad")
 	}
@@ -197,42 +172,35 @@ func mint(holder solana.PublicKey, candyMachineAddress solana.PublicKey, configI
 		return []byte{}, errors.New("bad")
 	}
 
-	treasuryAuthority, _ := GetTreasuryAuthority(cm.Oracle)
-	treasuryAuthorityData := GetTreasuryAuthorityData(treasuryAuthority)
-	if treasuryAuthorityData == nil {
-		fmt.Println("???????")
-		return []byte{}, errors.New("bad")
-
-	}
-	userTreasuryTokenAccountAddress, err := getTokenWallet(holder, treasuryAuthorityData.TreasuryMint)
-	listing, _ := GetListing(cm.Oracle, candyMachineAddress, uint64(configIndex))
-	fmt.Println(cm.Oracle, cm.Name, treasuryAuthority, listing)
-	treasuryTokenAccount, _ := GetTreasuryTokenAccount(cm.Oracle)
-
 	mintIx := someplace.NewMintNftInstructionBuilder().
 		SetConfigIndex(uint64(configIndex)).
 		SetCreatorBump(creatorBump).
+		SetMintHashAccount(mintHash).
 		SetCandyMachineAccount(candyMachineAddress).
 		SetCandyMachineCreatorAccount(candyMachineCreator).
 		SetPayerAccount(holder).
 		SetOracleAccount(cm.Oracle).
-		SetMintAccount(mint.PublicKey()).
+		SetMintAccount(mint).
+		SetMintAtaAccount(mintAta.PublicKey()).
 		SetMetadataAccount(metadataAddress).
 		SetMasterEditionAccount(masterEdition).
-		SetMintAuthorityAccount(holder).
-		SetUpdateAuthorityAccount(holder).
+		SetTreasuryAuthorityAccount(treasuryAuthority).
 		SetTokenMetadataProgramAccount(token_metadata.ProgramID).
 		SetTokenProgramAccount(token.ProgramID).
+		SetListingAccount(listing).
+		SetInitializerTokenAccountAccount(initializerTokenAccount).
 		SetSystemProgramAccount(system.ProgramID).
 		SetRentAccount(solana.SysVarRentPubkey).
 		SetClockAccount(solana.SysVarClockPubkey).
-		SetInstructionSysvarAccountAccount(solana.SysVarInstructionsPubkey).
-		SetListingAccount(listing).
-		SetInitializerTokenAccountAccount(userTreasuryTokenAccountAddress).
-		SetTreasuryTokenAccountAccount(treasuryTokenAccount)
+		SetInstructionSysvarAccountAccount(solana.SysVarInstructionsPubkey)
+
 	err = mintIx.Validate()
 	if err != nil {
 		return []byte{}, errors.New("bad")
+	}
+	treasuryData := storefront.GetTreasuryAuthorityData(treasuryAuthority)
+	for _, split := range treasuryData.Splits {
+		mintIx.Append(solana.NewAccountMeta(split.TokenAddress, true, false))
 	}
 	instructions = append(instructions,
 		mintIx.
@@ -246,12 +214,10 @@ func mint(holder solana.PublicKey, candyMachineAddress solana.PublicKey, configI
 	txB, _ := txBuilder.Build()
 	txJson, _ := json.MarshalIndent(BuyResponse{
 		Tx:      *txB,
-		MintKey: mint.PrivateKey.String(),
+		MintKey: mintAta.PrivateKey.String(),
 	}, "", "  ")
 
 	fmt.Println(string(txJson))
-	fmt.Println("configline", configIndex)
-
 	return txJson, nil
 
 }

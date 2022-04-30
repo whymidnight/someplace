@@ -5,9 +5,11 @@ use crate::ix_accounts::*;
 use crate::state::*;
 use crate::structs::*;
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::system_instruction;
 use anchor_lang::Discriminator;
-use anchor_spl::token::{self, Burn, InitializeAccount, MintTo, Transfer};
+use anchor_spl::token::{self, Burn, InitializeAccount, InitializeMint, Mint, MintTo, Transfer};
 use mpl_token_metadata::state::{MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH};
+use solana_program::program::invoke;
 
 use anchor_lang::solana_program::slot_hashes::SlotHashes;
 
@@ -208,15 +210,15 @@ pub mod someplace {
         listing.batch = ctx.accounts.batch.key();
         listing.oracle = ctx.accounts.oracle.key();
 
-        if let Some(is_listed_set) = is_listed {
-            listing.is_listed = is_listed_set;
+        if is_listed.is_some() {
+            listing.is_listed = is_listed.unwrap();
         }
 
-        if let Some(lifecycle_start_set) = lifecycle_start {
-            listing.lifecycle_start = lifecycle_start_set;
+        if lifecycle_start.is_some() {
+            listing.lifecycle_start = lifecycle_start.unwrap();
         }
-        if let Some(price_set) = price {
-            listing.price = (price_set as f64
+        if price.is_some() {
+            listing.price = (price.unwrap() as f64
                 * 10_usize.pow(treasury_authority.treasury_decimals as u32) as f64)
                 as u64;
         }
@@ -260,6 +262,7 @@ pub mod someplace {
         authority.oracle = oracle.key();
         authority.adornment = adornment;
         authority.whitelists = 0;
+        authority.treasury_decimals = treasury_mint.decimals;
         authority.treasury_mint = treasury_mint.key();
         authority.treasury_token_account = treasury_token_account.key();
 
@@ -293,6 +296,34 @@ pub mod someplace {
         whitelist.oracle = oracle.key();
 
         authority.whitelists += 1;
+        Ok(())
+    }
+
+    pub fn ammend_storefront_splits(
+        ctx: Context<AmmendStorefrontSplits>,
+        storefront_splits: Vec<Split>,
+    ) -> ProgramResult {
+        let oracle = &ctx.accounts.oracle;
+        let authority = &mut ctx.accounts.treasury_authority;
+        if authority.oracle != oracle.key() {
+            return Err(QuestError::SuspiciousTransaction.into());
+        }
+
+        authority.splits = storefront_splits.clone();
+
+        let sum_shares = authority
+            .splits
+            .iter()
+            .map(|split| split.share)
+            .reduce(|accumulator, split| accumulator + split);
+        if !sum_shares.is_some() {
+            return Err(QuestError::SuspiciousTransaction.into());
+        }
+        let sum = sum_shares.unwrap();
+        if sum != 100 {
+            return Err(QuestError::SuspiciousTransaction.into());
+        }
+
         Ok(())
     }
 
@@ -539,6 +570,11 @@ pub mod someplace {
 
         listing.mints += 1;
 
+        let treasury_authority = &mut ctx.accounts.treasury_authority;
+        if treasury_authority.oracle != ctx.accounts.oracle.key() {
+            return Err(QuestError::SuspiciousTransaction.into());
+        }
+
         // ensures valid listing for item in batch
         if listing.oracle != ctx.accounts.oracle.key() {
             return Err(QuestError::SuspiciousTransaction.into());
@@ -554,11 +590,61 @@ pub mod someplace {
             return Err(QuestError::SuspiciousTransaction.into());
         }
 
-        if listing.is_listed != true {
+        if !listing.is_listed {
             return Err(QuestError::SuspiciousTransaction.into());
         }
 
         // assert_valid_go_live(payer, clock, candy_machine)?;
+        let payer = &mut ctx.accounts.payer;
+        let mint = &mut ctx.accounts.mint;
+
+        token::mint_to(
+            CpiContext::new(
+                ctx.accounts.token_program.to_account_info(),
+                MintTo {
+                    mint: mint.to_account_info(),
+                    to: ctx.accounts.mint_ata.to_account_info(),
+                    authority: payer.to_account_info(),
+                },
+            ),
+            1,
+        )?;
+
+        let mut i: usize = 0;
+        // r/shittyprogramming - messy code naming sorry :(
+        let storefront_splits = treasury_authority.splits.clone();
+        while i < treasury_authority.splits.len() {
+            let split = &storefront_splits[i];
+            // the order of token address inclusion is respectful to
+            // the sequence in `treasury_authority.splits`
+            if ctx.remaining_accounts[i].key() != split.token_address {
+                return Err(QuestError::SuspiciousTransaction.into());
+            }
+            let tender_cpx = Transfer {
+                from: ctx.accounts.initializer_token_account.to_account_info(),
+                to: ctx.remaining_accounts[i].to_account_info(),
+                authority: ctx.accounts.payer.to_account_info(),
+            };
+            let tender_cpx_context =
+                CpiContext::new(ctx.accounts.token_program.to_account_info(), tender_cpx);
+            msg!(
+                "foaat {} {} {} {} {}",
+                listing.price,
+                split.share,
+                (split.share as u64) as f64,
+                (split.share as u64) as f64 / 100.0,
+                ((listing.price as f64 * (split.share as u64) as f64 / 100.0)
+                    * 10_usize.pow(treasury_authority.treasury_decimals as u32) as f64)
+                    as u64,
+            );
+            token::transfer(
+                tender_cpx_context,
+                ((listing.price as f64 * (split.share as u64) as f64 / 100.0)
+                    * 10_usize.pow(treasury_authority.treasury_decimals as u32) as f64)
+                    as u64,
+            )?;
+            i += 1;
+        }
 
         let config_line = get_config_line(&candy_machine, config_index as usize)?;
 
@@ -583,7 +669,7 @@ pub mod someplace {
         let metadata_infos = vec![
             ctx.accounts.metadata.to_account_info(),
             ctx.accounts.mint.to_account_info(),
-            ctx.accounts.mint_authority.to_account_info(),
+            ctx.accounts.payer.to_account_info(),
             ctx.accounts.payer.to_account_info(),
             ctx.accounts.token_metadata_program.to_account_info(),
             ctx.accounts.token_program.to_account_info(),
@@ -595,7 +681,7 @@ pub mod someplace {
         let master_edition_infos = vec![
             ctx.accounts.master_edition.to_account_info(),
             ctx.accounts.mint.to_account_info(),
-            ctx.accounts.mint_authority.to_account_info(),
+            ctx.accounts.payer.to_account_info(),
             ctx.accounts.payer.to_account_info(),
             ctx.accounts.metadata.to_account_info(),
             ctx.accounts.token_metadata_program.to_account_info(),
@@ -609,8 +695,8 @@ pub mod someplace {
             &create_metadata_accounts(
                 *ctx.accounts.token_metadata_program.key,
                 *ctx.accounts.metadata.key,
-                *ctx.accounts.mint.key,
-                *ctx.accounts.mint_authority.key,
+                ctx.accounts.mint.key(),
+                *ctx.accounts.payer.key,
                 *ctx.accounts.payer.key,
                 candy_machine_creator.key(),
                 config_line.name,
@@ -629,9 +715,9 @@ pub mod someplace {
             &create_master_edition(
                 *ctx.accounts.token_metadata_program.key,
                 *ctx.accounts.master_edition.key,
-                *ctx.accounts.mint.key,
+                ctx.accounts.mint.key(),
                 candy_machine_creator.key(),
-                *ctx.accounts.mint_authority.key,
+                *ctx.accounts.payer.key,
                 *ctx.accounts.metadata.key,
                 *ctx.accounts.payer.key,
                 Some(candy_machine.data.max_supply),
@@ -643,7 +729,7 @@ pub mod someplace {
         let mut new_update_authority = Some(candy_machine.oracle);
 
         if !candy_machine.data.retain_authority {
-            new_update_authority = Some(ctx.accounts.update_authority.key());
+            new_update_authority = Some(ctx.accounts.payer.key());
         }
 
         invoke_signed(
@@ -692,6 +778,7 @@ pub mod someplace {
             }
         }
 
+        /*
         let tender_cpx = Transfer {
             from: ctx.accounts.initializer_token_account.to_account_info(),
             to: ctx.accounts.treasury_token_account.to_account_info(),
@@ -700,6 +787,14 @@ pub mod someplace {
         let tender_cpx_context =
             CpiContext::new(ctx.accounts.token_program.to_account_info(), tender_cpx);
         token::transfer(tender_cpx_context, listing.price)?;
+        */
+
+        /*
+            remaining accounts will be ordered such that -
+
+            the first _n_ accounts must equal to their _n_ account in treasury.splits
+            the remainder of remaining accounts present additional batches/candy machines
+        */
 
         Ok(())
     }

@@ -15,6 +15,10 @@ func main() {
 	defer fetchNftsFunc.Release()
 	global.Set("reportCatalog", fetchNftsFunc)
 
+	FetchNftHashMapFunc := js.FuncOf(integrations.FetchNftHashMap)
+	defer FetchNftHashMapFunc.Release()
+	global.Set("reportHashMap", FetchNftHashMapFunc)
+
 	sellablesFunc := js.FuncOf(integrations.Sellables)
 	defer sellablesFunc.Release()
 	global.Set("sellables", sellablesFunc)

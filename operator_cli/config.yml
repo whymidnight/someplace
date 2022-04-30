@@ -1,3 +1,14 @@
 OraclePath: ./oracle.key
-TreasuryMint: 2Wob5Y6FWYMaxgHuitMLpKxFCC5zJwQUG2C46dm8wtzL
+TreasuryMint: 3XeA57a7vZSD6krvu5sGUN3A5SCKJmYadeoiQ8YmACbz
 ListingsTable: ./listings.csv
+HashMap: ./hashmap.json
+Splits:
+  - TokenAddress: 9vxxGZBpAS8ZNo273bLeBBmELFHMwuCLaKzWNa7haWKs
+    OpCode: 1
+    Share: 40
+  - TokenAddress: HWx4bbpL8xXH5bGpSHr1T9EiZSqKb3LgiQB2TA5jd45p
+    OpCode: 1
+    Share: 40
+  - TokenAddress: 6r4TW5kp8DWHqwBMFDMCYWMspz8358GgcenSrreA5Yqi
+    OpCode: 1
+    Share: 20

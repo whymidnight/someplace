@@ -33,12 +33,21 @@ pub struct ModifyListing<'info> {
     #[account(mut)]
     pub oracle: Signer<'info>,
     #[account(
+        mut,
         seeds = [oracle.key().as_ref(), batch.key().as_ref(), config_index.to_le_bytes().as_ref()],
         bump,
     )]
     pub listing: Account<'info, Listing>,
     pub treasury_authority: Account<'info, TreasuryAuthority>,
     pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct AmmendStorefrontSplits<'info> {
+    #[account(mut)]
+    pub oracle: Signer<'info>,
+    #[account(mut)]
+    pub treasury_authority: Account<'info, TreasuryAuthority>,
 }
 
 #[derive(Accounts)]
@@ -284,11 +293,24 @@ pub struct MintNFT<'info> {
     #[account(mut)]
     /// CHECK: legacy
     pub metadata: UncheckedAccount<'info>,
-    #[account(mut)]
     /// CHECK: legacy
-    pub mint: UncheckedAccount<'info>,
-    pub mint_authority: Signer<'info>,
-    pub update_authority: Signer<'info>,
+    #[account(
+        init,
+        seeds = [MINTYHASH.as_ref(), oracle.key().as_ref(), listing.key().as_ref(), listing.mints.to_le_bytes().as_ref()],
+        bump,
+        payer = payer,
+        mint::decimals = 0,
+        mint::authority = payer,
+        mint::freeze_authority = payer
+    )]
+    pub mint: Account<'info, Mint>,
+    #[account(
+        init,
+        payer = payer,
+        token::mint = mint,
+        token::authority = payer,  
+    )]
+    pub mint_ata: Account<'info, TokenAccount>,
     #[account(mut)]
     /// CHECK: legacy
     pub master_edition: UncheckedAccount<'info>,
@@ -303,7 +325,7 @@ pub struct MintNFT<'info> {
     /// CHECK: legacy
     pub instruction_sysvar_account: UncheckedAccount<'info>,
     #[account(mut)]
-    pub treasury_token_account: Box<Account<'info, TokenAccount>>,
+    pub treasury_authority: Box<Account<'info, TreasuryAuthority>>,
     #[account(mut)]
     pub initializer_token_account: Box<Account<'info, TokenAccount>>,
 }

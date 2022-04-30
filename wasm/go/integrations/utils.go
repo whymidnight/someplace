@@ -2,7 +2,7 @@ package integrations
 
 import (
 	"context"
-	"creaturez.nft/wasm/v2/someplace"
+	"creaturez.nft/someplace"
 	ag_binary "github.com/gagliardetto/binary"
 	token_metadata "github.com/gagliardetto/metaplex-go/clients/token-metadata"
 	"github.com/gagliardetto/solana-go"

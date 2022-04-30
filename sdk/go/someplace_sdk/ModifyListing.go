@@ -21,7 +21,7 @@ type ModifyListing struct {
 	//
 	// [1] = [WRITE, SIGNER] oracle
 	//
-	// [2] = [] listing
+	// [2] = [WRITE] listing
 	//
 	// [3] = [] treasuryAuthority
 	//
@@ -85,7 +85,7 @@ func (inst *ModifyListing) GetOracleAccount() *ag_solanago.AccountMeta {
 
 // SetListingAccount sets the "listing" account.
 func (inst *ModifyListing) SetListingAccount(listing ag_solanago.PublicKey) *ModifyListing {
-	inst.AccountMetaSlice[2] = ag_solanago.Meta(listing)
+	inst.AccountMetaSlice[2] = ag_solanago.Meta(listing).WRITE()
 	return inst
 }
 

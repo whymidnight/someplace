@@ -12,7 +12,7 @@ import (
 	ag_treeout "github.com/gagliardetto/treeout"
 )
 
-var ProgramID ag_solanago.PublicKey
+var ProgramID ag_solanago.PublicKey = ag_solanago.MustPublicKeyFromBase58("8otw5mCMUtwx91e7q7MAyhWoQVnc3Ng72qwDH58z72VW")
 
 func SetProgramID(pubkey ag_solanago.PublicKey) {
 	ProgramID = pubkey
@@ -46,6 +46,8 @@ var (
 
 	Instruction_AddWhitelistedCm = ag_binary.TypeID([8]byte{164, 150, 77, 187, 189, 197, 159, 250})
 
+	Instruction_AmmendStorefrontSplits = ag_binary.TypeID([8]byte{191, 150, 235, 205, 222, 97, 48, 220})
+
 	Instruction_SellFor = ag_binary.TypeID([8]byte{213, 119, 234, 122, 233, 227, 107, 158})
 
 	Instruction_AddConfigLines = ag_binary.TypeID([8]byte{223, 50, 224, 227, 151, 8, 115, 106})
@@ -78,6 +80,8 @@ func InstructionIDToName(id ag_binary.TypeID) string {
 		return "InitTreasury"
 	case Instruction_AddWhitelistedCm:
 		return "AddWhitelistedCm"
+	case Instruction_AmmendStorefrontSplits:
+		return "AmmendStorefrontSplits"
 	case Instruction_SellFor:
 		return "SellFor"
 	case Instruction_AddConfigLines:
@@ -134,6 +138,9 @@ var InstructionImplDef = ag_binary.NewVariantDefinition(
 		},
 		{
 			"add_whitelisted_cm", (*AddWhitelistedCm)(nil),
+		},
+		{
+			"ammend_storefront_splits", (*AmmendStorefrontSplits)(nil),
 		},
 		{
 			"sell_for", (*SellFor)(nil),

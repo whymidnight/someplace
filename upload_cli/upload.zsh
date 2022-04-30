@@ -1,9 +1,9 @@
 #!/bin/zsh
 
 npx ts-node-script ./src/candy-machine-v2-cli.ts upload \
-    -e testnet \
+    -e devnet \
     -k ./oracle.key \
     -cp ./config.json \
     -c example \
-    -r https://api.testnet.solana.com \
+    -r https://api.devnet.solana.com \
     ./assets

@@ -71,3 +71,10 @@ pub struct ConfigLine {
     pub cardinality: String,
     pub uri: String,
 }
+
+#[derive(AnchorSerialize, AnchorDeserialize, Serialize, Deserialize, Clone)]
+pub struct Split {
+    pub token_address: Pubkey,
+    pub op_code: u8, // 0 - burn, 1 - transfer to `token_address`
+    pub share: u8,
+}

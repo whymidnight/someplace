@@ -13,7 +13,7 @@ import (
 	"strings"
 	"syscall/js"
 
-	"creaturez.nft/wasm/v2/someplace"
+	"creaturez.nft/someplace"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 )

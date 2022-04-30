@@ -109,3 +109,17 @@ func GetMintHash(oracle, listing solana.PublicKey, mints uint64) (solana.PublicK
 		someplace.ProgramID,
 	)
 }
+
+func GetMint(oracle, listing solana.PublicKey, mints uint64) (solana.PublicKey, uint8, error) {
+	buf := make([]byte, 8)
+	binary.LittleEndian.PutUint64(buf, mints)
+	return solana.FindProgramAddress(
+		[][]byte{
+			[]byte("mintyhash"),
+			oracle.Bytes(),
+			listing.Bytes(),
+			buf,
+		},
+		someplace.ProgramID,
+	)
+}

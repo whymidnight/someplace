@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 
@@ -15,7 +16,12 @@ type configYaml struct {
 	OraclePath    string `yaml:"OraclePath"`
 	TreasuryMint  string `yaml:"TreasuryMint"`
 	ListingsTable string `yaml:"ListingsTable"`
-	HashList      string `yaml:"HashList"`
+	HashMap       string `yaml:"HashMap"`
+	Splits        []struct {
+		TokenAddress string `yaml:"TokenAddress"`
+		OpCode       uint8  `yaml:"OpCode"`
+		Share        uint8  `yaml:"Share"`
+	} `yaml:"Splits"`
 }
 
 func init() {
@@ -36,7 +42,7 @@ func readConfig(configPath string) *configYaml {
 }
 
 func main() {
-	config := readConfig(os.Args[1])
+	config := readConfig(os.Args[2])
 	if config == nil {
 		panic(errors.New("bad config"))
 	}
@@ -46,11 +52,23 @@ func main() {
 		panic(err)
 	}
 
-	switch os.Args[2] {
+	switch os.Args[1] {
 	case "sync_listings":
 		{
 			storefront.SyncListingsTable(oracle, config.ListingsTable)
 			storefront.ReportCatalog(oracle.PublicKey(), config.ListingsTable)
+			break
+		}
+	case "sync_storefront_splits":
+		{
+			// storefront.ReportCatalog(oracle.PublicKey(), config.ListingsTable)
+			fmt.Println(config.Splits)
+			splits := make([]someplace.Split, 0)
+			for i := range make([]int, len(config.Splits)) {
+				splits = append(splits, someplace.Split{TokenAddress: solana.MustPublicKeyFromBase58(config.Splits[i].TokenAddress), OpCode: config.Splits[i].OpCode, Share: config.Splits[i].Share})
+				i++
+			}
+			storefront.AmmendStorefrontSplits(oracle, splits)
 			break
 		}
 	case "instance":
@@ -59,14 +77,25 @@ func main() {
 			if err != nil {
 				panic(errors.New("bad treasury mint in config"))
 			}
-			storefront.Instance(oracle, treasuryMint)
+			splits := make([]someplace.Split, 0)
+			for i := range make([]int, len(config.Splits)) {
+				splits = append(splits, someplace.Split{TokenAddress: solana.MustPublicKeyFromBase58(config.Splits[i].TokenAddress), OpCode: config.Splits[i].OpCode, Share: config.Splits[i].Share})
+				i++
+			}
+			storefront.Instance(oracle, treasuryMint, splits)
 			break
 		}
-	case "report":
+	case "report_listings":
 		{
 			storefront.ReportCatalog(oracle.PublicKey(), config.ListingsTable)
+			break
+		}
+	case "report_hashlist":
+		{
+			storefront.ReportHashMap(oracle.PublicKey(), config.HashMap)
 			break
 		}
 	}
 
 }
+

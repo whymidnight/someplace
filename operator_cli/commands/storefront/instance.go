@@ -1,12 +1,13 @@
 package storefront
 
 import (
+	"creaturez.nft/someplace"
 	"creaturez.nft/someplace/storefront/ops"
 	"github.com/gagliardetto/solana-go"
 )
 
 // Instance will execute required operations that configure a storefront for `oracle`.
-func Instance(oracle solana.PrivateKey, mint solana.PublicKey) {
+func Instance(oracle solana.PrivateKey, mint solana.PublicKey, splits []someplace.Split) {
 	/*
 	   Required ops include,
 
@@ -15,4 +16,5 @@ func Instance(oracle solana.PrivateKey, mint solana.PublicKey) {
 	*/
 	ops.EnableBatches(oracle)
 	ops.Treasure(oracle, mint)
+	ops.AmmendStorefrontSplits(oracle, splits)
 }

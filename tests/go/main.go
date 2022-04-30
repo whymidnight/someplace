@@ -23,9 +23,9 @@ import (
 
 const DEVNET = "https://sparkling-dark-shadow.solana-devnet.quiknode.pro/0e9964e4d70fe7f856e7d03bc7e41dc6a2b84452/"
 const TESTNET = "https://api.testnet.solana.com"
-const NETWORK = TESTNET
+const NETWORK = DEVNET
 
-var MINT = solana.MustPublicKeyFromBase58("9K9h3f5dEPyqEvaJ2kjNSbjwBq7j9ri1Bn8soF41J2w1")
+var MINT = solana.MustPublicKeyFromBase58("3XeA57a7vZSD6krvu5sGUN3A5SCKJmYadeoiQ8YmACbz")
 
 func init() {
 	someplace.SetProgramID(solana.MustPublicKeyFromBase58("8otw5mCMUtwx91e7q7MAyhWoQVnc3Ng72qwDH58z72VW"))
@@ -41,7 +41,12 @@ func main() {
 	// treasureCMs()
 	// treasureVerify()
 	// treasureVerifyCM()
-	mint()
+	candyMachineAddresses := []solana.PublicKey{solana.MustPublicKeyFromBase58("2h1BiLfvU1DH2kyYDZ7KuQh81hSDU1iEQ5ZAbjqDjH8C"), solana.MustPublicKeyFromBase58("Ek4cSAY9JfJFaiVk5MQBZ9yWZiMs5ZHTjEX8Nbm3VutN")}
+	for _, candyMachine := range candyMachineAddresses {
+		for range make([]int, 20) {
+			mint(candyMachine)
+		}
+	}
 	// mintRare()
 	// holder_nft_metadata()
 	// burn()
@@ -55,6 +60,38 @@ func main() {
 	// GetMarketMintMeta()
 	// GetMarketListingsData()
 
+	// CreateNTokenAccountsOfMint(MINT, 3)
+
+}
+
+func CreateNTokenAccountsOfMint(mint solana.PublicKey, amount int) {
+	oracle, err := solana.PrivateKeyFromSolanaKeygenFile("./oracle.key")
+	if err != nil {
+		panic(err)
+	}
+	tokenAccounts := make([]string, amount)
+	var instructions []solana.Instruction
+	for i := range tokenAccounts {
+		wallet := solana.NewWallet()
+		ata, _ := utils.GetTokenWallet(wallet.PublicKey(), mint)
+		tokenAccounts[i] = ata.String()
+
+		instructions = append(instructions,
+			atok.NewCreateInstructionBuilder().
+				SetPayer(oracle.PublicKey()).
+				SetWallet(wallet.PublicKey()).
+				SetMint(mint).
+				Build(),
+		)
+
+	}
+	utils.SendTx(
+		"list",
+		instructions,
+		append(make([]solana.PrivateKey, 0), oracle),
+		oracle.PublicKey(),
+	)
+	fmt.Println(tokenAccounts)
 }
 
 func marketList() {
@@ -365,30 +402,27 @@ func burn() {
 
 }
 
-func mint() {
-	candyMachineAddress := solana.MustPublicKeyFromBase58("eiwAMxibWH46Kkr3rVXG1ji6i9F3xWojrnXWcgf8tBT")
+func mint(candyMachineAddress solana.PublicKey) {
 
 	oracle, err := solana.PrivateKeyFromSolanaKeygenFile("./oracle.key")
 	if err != nil {
 		panic(err)
 	}
+	initializerTokenAccount, _ := utils.GetTokenWallet(oracle.PublicKey(), MINT)
 
-	mint := solana.NewWallet().PrivateKey
+	treasury, _ := storefront.GetTreasuryAuthority(oracle.PublicKey())
+	treasuryData := storefront.GetTreasuryAuthorityData(treasury)
 
 	client := rpc.New(NETWORK)
-	userTokenAccountAddress, err := utils.GetTokenWallet(oracle.PublicKey(), mint.PublicKey())
-	if err != nil {
-		panic(err)
-	}
 
 	candyMachineRaw, err := client.GetAccountInfo(context.TODO(), candyMachineAddress)
 	if err != nil {
 		panic(err)
 	}
 
-	signers := []solana.PrivateKey{mint, oracle}
+	// signers :=
 
-	min, err := client.GetMinimumBalanceForRentExemption(context.TODO(), token.MINT_SIZE, rpc.CommitmentFinalized)
+	// min, err := client.GetMinimumBalanceForRentExemption(context.TODO(), token.MINT_SIZE, rpc.CommitmentFinalized)
 	if err != nil {
 		panic(err)
 	}
@@ -401,41 +435,25 @@ func mint() {
 	}
 
 	var instructions []solana.Instruction
-	instructions = append(instructions,
-		system.NewCreateAccountInstructionBuilder().
-			SetOwner(token.ProgramID).
-			SetNewAccount(mint.PublicKey()).
-			SetSpace(token.MINT_SIZE).
-			SetFundingAccount(oracle.PublicKey()).
-			SetLamports(min).
-			Build(),
 
-		token.NewInitializeMint2InstructionBuilder().
-			SetMintAccount(mint.PublicKey()).
-			SetDecimals(0).
-			SetMintAuthority(oracle.PublicKey()).
-			SetFreezeAuthority(oracle.PublicKey()).
-			Build(),
-
-		atok.NewCreateInstructionBuilder().
-			SetPayer(oracle.PublicKey()).
-			SetWallet(oracle.PublicKey()).
-			SetMint(mint.PublicKey()).
-			Build(),
-
-		token.NewMintToInstructionBuilder().
-			SetMintAccount(mint.PublicKey()).
-			SetDestinationAccount(userTokenAccountAddress).
-			SetAuthorityAccount(oracle.PublicKey()).
-			SetAmount(1).
-			Build(),
-	)
-
-	metadataAddress, err := utils.GetMetadata(mint.PublicKey())
+	listing, _ := storefront.GetListing(oracle.PublicKey(), candyMachineAddress, 1)
+	listingData := storefront.GetListingData(listing)
+	js, _ := json.MarshalIndent(treasuryData, "", "  ")
+	fmt.Println(string(js))
+	mint, _, _ := storefront.GetMint(oracle.PublicKey(), listing, listingData.Mints)
+	/*
+		    mintAta, _ := utils.GetTokenWallet(oracle.PublicKey(), mint)
+			if err != nil {
+				panic(err)
+			}
+	*/
+	mintAta := solana.NewWallet()
+	mintHash, _, _ := storefront.GetMintHash(oracle.PublicKey(), listing, listingData.Mints)
+	metadataAddress, err := utils.GetMetadata(mint)
 	if err != nil {
 		panic(err)
 	}
-	masterEdition, err := utils.GetMasterEdition(mint.PublicKey())
+	masterEdition, err := utils.GetMasterEdition(mint)
 	if err != nil {
 		panic(err)
 	}
@@ -444,10 +462,6 @@ func mint() {
 		panic(err)
 	}
 
-	listing, _ := storefront.GetListing(oracle.PublicKey(), candyMachineAddress, 1)
-	listingData := storefront.GetListingData(listing)
-	mintHash, _, _ := storefront.GetMintHash(oracle.PublicKey(), listing, listingData.Mints)
-	treasuryTokenAccount, _ := storefront.GetTreasuryTokenAccount(oracle.PublicKey())
 	mintIx := someplace.NewMintNftInstructionBuilder().
 		SetConfigIndex(uint64(1)).
 		SetCreatorBump(creatorBump).
@@ -456,16 +470,15 @@ func mint() {
 		SetCandyMachineCreatorAccount(candyMachineCreator).
 		SetPayerAccount(oracle.PublicKey()).
 		SetOracleAccount(cm.Oracle).
-		SetMintAccount(mint.PublicKey()).
+		SetMintAccount(mint).
+		SetMintAtaAccount(mintAta.PublicKey()).
 		SetMetadataAccount(metadataAddress).
 		SetMasterEditionAccount(masterEdition).
-		SetMintAuthorityAccount(oracle.PublicKey()).
-		SetUpdateAuthorityAccount(oracle.PublicKey()).
-		SetTreasuryTokenAccountAccount(treasuryTokenAccount).
+		SetTreasuryAuthorityAccount(treasury).
 		SetTokenMetadataProgramAccount(token_metadata.ProgramID).
 		SetTokenProgramAccount(token.ProgramID).
 		SetListingAccount(listing).
-		SetInitializerTokenAccountAccount(solana.MustPublicKeyFromBase58("Eq3JhQ6eaN3phtbBKaPPRTsxhkB7ehNECdkhFsedm8zA")).
+		SetInitializerTokenAccountAccount(initializerTokenAccount).
 		SetSystemProgramAccount(system.ProgramID).
 		SetRentAccount(solana.SysVarRentPubkey).
 		SetClockAccount(solana.SysVarClockPubkey).
@@ -475,6 +488,18 @@ func mint() {
 	if err != nil {
 		panic(err)
 	}
+
+	for _, split := range treasuryData.Splits {
+		mintIx.Append(solana.NewAccountMeta(split.TokenAddress, true, false))
+	}
+	for range make([]int, 10) {
+		mintIx.Append(&solana.AccountMeta{
+			PublicKey:  solana.NewWallet().PublicKey(),
+			IsWritable: false,
+			IsSigner:   false,
+		})
+	}
+
 	instructions = append(instructions,
 		mintIx.Build(),
 	)
@@ -482,7 +507,7 @@ func mint() {
 	utils.SendTx(
 		"mint",
 		instructions,
-		signers,
+		[]solana.PrivateKey{oracle, mintAta.PrivateKey},
 		oracle.PublicKey(),
 	)
 

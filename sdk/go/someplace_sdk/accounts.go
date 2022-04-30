@@ -389,6 +389,7 @@ type TreasuryAuthority struct {
 	TreasuryDecimals     uint8
 	TreasuryTokenAccount ag_solanago.PublicKey
 	TreasuryMint         ag_solanago.PublicKey
+	Splits               []Split
 	Adornment            string
 }
 
@@ -422,6 +423,11 @@ func (obj TreasuryAuthority) MarshalWithEncoder(encoder *ag_binary.Encoder) (err
 	}
 	// Serialize `TreasuryMint` param:
 	err = encoder.Encode(obj.TreasuryMint)
+	if err != nil {
+		return err
+	}
+	// Serialize `Splits` param:
+	err = encoder.Encode(obj.Splits)
 	if err != nil {
 		return err
 	}
@@ -469,6 +475,11 @@ func (obj *TreasuryAuthority) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (
 	}
 	// Deserialize `TreasuryMint`:
 	err = decoder.Decode(&obj.TreasuryMint)
+	if err != nil {
+		return err
+	}
+	// Deserialize `Splits`:
+	err = decoder.Decode(&obj.Splits)
 	if err != nil {
 		return err
 	}

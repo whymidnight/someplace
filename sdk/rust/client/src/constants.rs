@@ -11,6 +11,7 @@ pub const URL: (&str, &str) = (
 */
 
 pub const URL: (&str, &str) = (
-    "https://old-hidden-mountain.solana-testnet.quiknode.pro/8c45affea47fca82045a44c953c2775ac1f871c1/",
-    "wss://old-hidden-mountain.solana-testnet.quiknode.pro/8c45affea47fca82045a44c953c2775ac1f871c1/",
+    "https://psytrbhymqlkfrhudd.dev.genesysgo.net:8899/",
+    "wss://psytrbhymqlkfrhudd.dev.genesysgo.net:8900/",
 );
+

@@ -21,7 +21,7 @@ func SendTx(
 	feePayer solana.PublicKey,
 ) {
 	rpcClient := rpc.New(NETWORK)
-	wsClient, err := ws.Connect(context.TODO(), "wss://api.testnet.solana.com")
+	wsClient, err := ws.Connect(context.TODO(), "wss://api.devnet.solana.com")
 	if err != nil {
 		log.Println("PANIC!!!", fmt.Errorf("unable to open WebSocket Client - %w", err))
 	}
@@ -56,7 +56,6 @@ func SendTx(
 	}
 
 	tx.EncodeTree(text.NewTreeEncoder(os.Stdout, doc))
-
 	bin, _ := tx.MarshalBinary()
 	sig, err := sendAndConfirmTransaction.SendAndConfirmTransaction(
 		context.TODO(),
@@ -72,3 +71,4 @@ func SendTx(
 	wsClient.Close()
 	log.Println(sig)
 }
+

@@ -91,3 +91,19 @@ func GetListingData(listing solana.PublicKey) *someplace.Listing {
 	return &data
 
 }
+func GetMintHashData(mintHash solana.PublicKey) *someplace.MintHash {
+	rpcClient := rpc.New(someplace.NETWORK)
+	bin, _ := rpcClient.GetAccountInfoWithOpts(context.TODO(), mintHash, &rpc.GetAccountInfoOpts{Commitment: "confirmed"})
+	if bin == nil {
+		return nil
+	}
+	var data someplace.MintHash
+	decoder := ag_binary.NewBorshDecoder(bin.Value.Data.GetBinary())
+	err := data.UnmarshalWithDecoder(decoder)
+	if err != nil {
+		panic(err)
+	}
+
+	return &data
+
+}

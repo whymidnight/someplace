@@ -69,11 +69,13 @@ pub struct TreasuryAuthority {
     pub treasury_decimals: u8,
     pub treasury_token_account: Pubkey,
     pub treasury_mint: Pubkey,
+    pub splits: Vec<Split>,
     pub adornment: String, // max 32 bytes
 }
 
 impl TreasuryAuthority {
-    pub const LEN: usize = 8 + 8 + 32 + 8 + 32 + 32 + 32;
+    pub const LEN: usize =
+        8 + 8 + 32 + 8 + 32 + 32 + (4 + (std::mem::size_of::<Split>() * 10)) + 32;
 }
 
 #[account]
