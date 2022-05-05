@@ -107,3 +107,54 @@ func GetMintHashData(mintHash solana.PublicKey) *someplace.MintHash {
 	return &data
 
 }
+
+func GetViasData(vias solana.PublicKey) *someplace.Vias {
+	rpcClient := rpc.New(someplace.NETWORK)
+	bin, _ := rpcClient.GetAccountInfoWithOpts(context.TODO(), vias, &rpc.GetAccountInfoOpts{Commitment: "confirmed"})
+	if bin == nil {
+		return nil
+	}
+	var data someplace.Vias
+	decoder := ag_binary.NewBorshDecoder(bin.Value.Data.GetBinary())
+	err := data.UnmarshalWithDecoder(decoder)
+	if err != nil {
+		panic(err)
+	}
+
+	return &data
+
+}
+
+func GetViaData(via solana.PublicKey) *someplace.Via {
+	rpcClient := rpc.New(someplace.NETWORK)
+	bin, _ := rpcClient.GetAccountInfoWithOpts(context.TODO(), via, &rpc.GetAccountInfoOpts{Commitment: "confirmed"})
+	if bin == nil {
+		return nil
+	}
+	var data someplace.Via
+	decoder := ag_binary.NewBorshDecoder(bin.Value.Data.GetBinary())
+	err := data.UnmarshalWithDecoder(decoder)
+	if err != nil {
+		panic(err)
+	}
+
+	return &data
+
+}
+
+func GetViaMappingData(viaMapping solana.PublicKey) *someplace.ViaMapping {
+	rpcClient := rpc.New(someplace.NETWORK)
+	bin, _ := rpcClient.GetAccountInfoWithOpts(context.TODO(), viaMapping, &rpc.GetAccountInfoOpts{Commitment: "confirmed"})
+	if bin == nil {
+		return nil
+	}
+	var data someplace.ViaMapping
+	decoder := ag_binary.NewBorshDecoder(bin.Value.Data.GetBinary())
+	err := data.UnmarshalWithDecoder(decoder)
+	if err != nil {
+		panic(err)
+	}
+
+	return &data
+
+}

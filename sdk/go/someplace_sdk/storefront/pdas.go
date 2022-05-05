@@ -74,6 +74,7 @@ func GetTreasuryAuthority(oracle solana.PublicKey) (solana.PublicKey, uint8) {
 	)
 	return addr, bump
 }
+
 func GetTreasuryTokenAccount(oracle solana.PublicKey) (solana.PublicKey, uint8) {
 	addr, bump, _ := solana.FindProgramAddress(
 		[][]byte{
@@ -122,4 +123,41 @@ func GetMint(oracle, listing solana.PublicKey, mints uint64) (solana.PublicKey, 
 		},
 		someplace.ProgramID,
 	)
+}
+
+func GetVias(oracle solana.PublicKey) (solana.PublicKey, uint8) {
+	addr, bump, _ := solana.FindProgramAddress(
+		[][]byte{
+			oracle.Bytes(),
+			[]byte("via"),
+		},
+		someplace.ProgramID,
+	)
+	return addr, bump
+}
+
+func GetVia(oracle solana.PublicKey, viaIndex uint64) (solana.PublicKey, uint8) {
+	buf := make([]byte, 8)
+	binary.LittleEndian.PutUint64(buf, viaIndex)
+	addr, bump, _ := solana.FindProgramAddress(
+		[][]byte{
+			oracle.Bytes(),
+			[]byte("via"),
+			buf,
+		},
+		someplace.ProgramID,
+	)
+	return addr, bump
+}
+
+func GetViaMapping(oracle, rarityTokenMint solana.PublicKey) (solana.PublicKey, uint8) {
+	addr, bump, _ := solana.FindProgramAddress(
+		[][]byte{
+			oracle.Bytes(),
+			[]byte("via"),
+			rarityTokenMint.Bytes(),
+		},
+		someplace.ProgramID,
+	)
+	return addr, bump
 }

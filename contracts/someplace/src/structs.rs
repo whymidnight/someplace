@@ -78,3 +78,9 @@ pub struct Split {
     pub op_code: u8, // 0 - burn, 1 - transfer to `token_address`
     pub share: u8,
 }
+
+#[derive(AnchorSerialize, AnchorDeserialize, Serialize, Deserialize, Clone)]
+pub struct ViaMint {
+    pub mint_address: Pubkey,
+    pub rarity: String,
+}

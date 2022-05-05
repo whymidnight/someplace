@@ -12,7 +12,7 @@ import (
 	ag_treeout "github.com/gagliardetto/treeout"
 )
 
-var ProgramID ag_solanago.PublicKey = ag_solanago.MustPublicKeyFromBase58("8otw5mCMUtwx91e7q7MAyhWoQVnc3Ng72qwDH58z72VW")
+var ProgramID ag_solanago.PublicKey
 
 func SetProgramID(pubkey ag_solanago.PublicKey) {
 	ProgramID = pubkey
@@ -36,6 +36,10 @@ var (
 
 	Instruction_CreateListing = ag_binary.TypeID([8]byte{18, 168, 45, 24, 191, 31, 117, 54})
 
+	Instruction_EnableVias = ag_binary.TypeID([8]byte{166, 236, 121, 143, 64, 232, 217, 165})
+
+	Instruction_EnableViaRarityTokenMinting = ag_binary.TypeID([8]byte{231, 210, 70, 70, 174, 123, 5, 95})
+
 	Instruction_ModifyListing = ag_binary.TypeID([8]byte{36, 132, 230, 119, 139, 147, 164, 183})
 
 	Instruction_EnableBatchUploading = ag_binary.TypeID([8]byte{212, 38, 162, 41, 25, 159, 102, 80})
@@ -56,7 +60,7 @@ var (
 
 	Instruction_MintNft = ag_binary.TypeID([8]byte{211, 57, 6, 167, 15, 219, 35, 251})
 
-	Instruction_MintNftRarity = ag_binary.TypeID([8]byte{56, 162, 100, 81, 69, 67, 107, 212})
+	Instruction_MintNftVia = ag_binary.TypeID([8]byte{218, 59, 166, 55, 110, 99, 20, 170})
 )
 
 // InstructionIDToName returns the name of the instruction given its ID.
@@ -70,6 +74,10 @@ func InstructionIDToName(id ag_binary.TypeID) string {
 		return "UnlistMarketListing"
 	case Instruction_CreateListing:
 		return "CreateListing"
+	case Instruction_EnableVias:
+		return "EnableVias"
+	case Instruction_EnableViaRarityTokenMinting:
+		return "EnableViaRarityTokenMinting"
 	case Instruction_ModifyListing:
 		return "ModifyListing"
 	case Instruction_EnableBatchUploading:
@@ -90,8 +98,8 @@ func InstructionIDToName(id ag_binary.TypeID) string {
 		return "InitializeCandyMachine"
 	case Instruction_MintNft:
 		return "MintNft"
-	case Instruction_MintNftRarity:
-		return "MintNftRarity"
+	case Instruction_MintNftVia:
+		return "MintNftVia"
 	default:
 		return ""
 	}
@@ -125,6 +133,12 @@ var InstructionImplDef = ag_binary.NewVariantDefinition(
 			"create_listing", (*CreateListing)(nil),
 		},
 		{
+			"enable_vias", (*EnableVias)(nil),
+		},
+		{
+			"enable_via_rarity_token_minting", (*EnableViaRarityTokenMinting)(nil),
+		},
+		{
 			"modify_listing", (*ModifyListing)(nil),
 		},
 		{
@@ -155,7 +169,7 @@ var InstructionImplDef = ag_binary.NewVariantDefinition(
 			"mint_nft", (*MintNft)(nil),
 		},
 		{
-			"mint_nft_rarity", (*MintNftRarity)(nil),
+			"mint_nft_via", (*MintNftVia)(nil),
 		},
 	},
 )

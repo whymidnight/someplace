@@ -3,6 +3,22 @@
 version = 3
 
 [[package]]
+name = "Questing"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+ "arrayref",
+ "mpl-candy-machine",
+ "mpl-token-metadata",
+ "solana-program",
+ "someplace",
+ "spl-associated-token-account",
+ "spl-token",
+ "spl-token-metadata",
+]
+
+[[package]]
 name = "aead"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"

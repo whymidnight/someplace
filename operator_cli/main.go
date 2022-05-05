@@ -90,7 +90,7 @@ func main() {
 			storefront.ReportCatalog(oracle.PublicKey(), config.ListingsTable)
 			break
 		}
-	case "report_hashlist":
+	case "report_hashmap":
 		{
 			storefront.ReportHashMap(oracle.PublicKey(), config.HashMap)
 			break

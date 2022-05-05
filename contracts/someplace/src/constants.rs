@@ -43,3 +43,4 @@ pub const BENEFIT_TOKEN: &[u8] = b"ballz";
 pub const TREASURY_MINT: &[u8] = b"treasury_mint";
 pub const TREASURY_WHITELIST: &[u8] = b"treasury_whitelist";
 pub const MINTYHASH: &[u8] = b"mintyhash";
+pub const VIA: &[u8] = b"via";

@@ -390,6 +390,7 @@ type TreasuryAuthority struct {
 	TreasuryTokenAccount ag_solanago.PublicKey
 	TreasuryMint         ag_solanago.PublicKey
 	Splits               []Split
+	ViaMints             []ViaMint
 	Adornment            string
 }
 
@@ -428,6 +429,11 @@ func (obj TreasuryAuthority) MarshalWithEncoder(encoder *ag_binary.Encoder) (err
 	}
 	// Serialize `Splits` param:
 	err = encoder.Encode(obj.Splits)
+	if err != nil {
+		return err
+	}
+	// Serialize `ViaMints` param:
+	err = encoder.Encode(obj.ViaMints)
 	if err != nil {
 		return err
 	}
@@ -480,6 +486,11 @@ func (obj *TreasuryAuthority) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (
 	}
 	// Deserialize `Splits`:
 	err = decoder.Decode(&obj.Splits)
+	if err != nil {
+		return err
+	}
+	// Deserialize `ViaMints`:
+	err = decoder.Decode(&obj.ViaMints)
 	if err != nil {
 		return err
 	}
@@ -604,6 +615,209 @@ func (obj *Listing) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err error)
 	}
 	// Deserialize `Mints`:
 	err = decoder.Decode(&obj.Mints)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type Via struct {
+	Oracle            ag_solanago.PublicKey
+	TreasuryAuthority ag_solanago.PublicKey
+	TokenMint         ag_solanago.PublicKey
+	Mints             uint64
+	Rarity            string
+}
+
+var ViaDiscriminator = [8]byte{54, 218, 102, 252, 31, 57, 112, 175}
+
+func (obj Via) MarshalWithEncoder(encoder *ag_binary.Encoder) (err error) {
+	// Write account discriminator:
+	err = encoder.WriteBytes(ViaDiscriminator[:], false)
+	if err != nil {
+		return err
+	}
+	// Serialize `Oracle` param:
+	err = encoder.Encode(obj.Oracle)
+	if err != nil {
+		return err
+	}
+	// Serialize `TreasuryAuthority` param:
+	err = encoder.Encode(obj.TreasuryAuthority)
+	if err != nil {
+		return err
+	}
+	// Serialize `TokenMint` param:
+	err = encoder.Encode(obj.TokenMint)
+	if err != nil {
+		return err
+	}
+	// Serialize `Mints` param:
+	err = encoder.Encode(obj.Mints)
+	if err != nil {
+		return err
+	}
+	// Serialize `Rarity` param:
+	err = encoder.Encode(obj.Rarity)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (obj *Via) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err error) {
+	// Read and check account discriminator:
+	{
+		discriminator, err := decoder.ReadTypeID()
+		if err != nil {
+			return err
+		}
+		if !discriminator.Equal(ViaDiscriminator[:]) {
+			return fmt.Errorf(
+				"wrong discriminator: wanted %s, got %s",
+				"[54 218 102 252 31 57 112 175]",
+				fmt.Sprint(discriminator[:]))
+		}
+	}
+	// Deserialize `Oracle`:
+	err = decoder.Decode(&obj.Oracle)
+	if err != nil {
+		return err
+	}
+	// Deserialize `TreasuryAuthority`:
+	err = decoder.Decode(&obj.TreasuryAuthority)
+	if err != nil {
+		return err
+	}
+	// Deserialize `TokenMint`:
+	err = decoder.Decode(&obj.TokenMint)
+	if err != nil {
+		return err
+	}
+	// Deserialize `Mints`:
+	err = decoder.Decode(&obj.Mints)
+	if err != nil {
+		return err
+	}
+	// Deserialize `Rarity`:
+	err = decoder.Decode(&obj.Rarity)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type ViaMapping struct {
+	TokenMint ag_solanago.PublicKey
+	ViasIndex uint64
+}
+
+var ViaMappingDiscriminator = [8]byte{71, 73, 58, 156, 93, 63, 56, 131}
+
+func (obj ViaMapping) MarshalWithEncoder(encoder *ag_binary.Encoder) (err error) {
+	// Write account discriminator:
+	err = encoder.WriteBytes(ViaMappingDiscriminator[:], false)
+	if err != nil {
+		return err
+	}
+	// Serialize `TokenMint` param:
+	err = encoder.Encode(obj.TokenMint)
+	if err != nil {
+		return err
+	}
+	// Serialize `ViasIndex` param:
+	err = encoder.Encode(obj.ViasIndex)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (obj *ViaMapping) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err error) {
+	// Read and check account discriminator:
+	{
+		discriminator, err := decoder.ReadTypeID()
+		if err != nil {
+			return err
+		}
+		if !discriminator.Equal(ViaMappingDiscriminator[:]) {
+			return fmt.Errorf(
+				"wrong discriminator: wanted %s, got %s",
+				"[71 73 58 156 93 63 56 131]",
+				fmt.Sprint(discriminator[:]))
+		}
+	}
+	// Deserialize `TokenMint`:
+	err = decoder.Decode(&obj.TokenMint)
+	if err != nil {
+		return err
+	}
+	// Deserialize `ViasIndex`:
+	err = decoder.Decode(&obj.ViasIndex)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type Vias struct {
+	Oracle            ag_solanago.PublicKey
+	TreasuryAuthority ag_solanago.PublicKey
+	Vias              uint64
+}
+
+var ViasDiscriminator = [8]byte{196, 68, 181, 56, 78, 66, 147, 86}
+
+func (obj Vias) MarshalWithEncoder(encoder *ag_binary.Encoder) (err error) {
+	// Write account discriminator:
+	err = encoder.WriteBytes(ViasDiscriminator[:], false)
+	if err != nil {
+		return err
+	}
+	// Serialize `Oracle` param:
+	err = encoder.Encode(obj.Oracle)
+	if err != nil {
+		return err
+	}
+	// Serialize `TreasuryAuthority` param:
+	err = encoder.Encode(obj.TreasuryAuthority)
+	if err != nil {
+		return err
+	}
+	// Serialize `Vias` param:
+	err = encoder.Encode(obj.Vias)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (obj *Vias) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err error) {
+	// Read and check account discriminator:
+	{
+		discriminator, err := decoder.ReadTypeID()
+		if err != nil {
+			return err
+		}
+		if !discriminator.Equal(ViasDiscriminator[:]) {
+			return fmt.Errorf(
+				"wrong discriminator: wanted %s, got %s",
+				"[196 68 181 56 78 66 147 86]",
+				fmt.Sprint(discriminator[:]))
+		}
+	}
+	// Deserialize `Oracle`:
+	err = decoder.Decode(&obj.Oracle)
+	if err != nil {
+		return err
+	}
+	// Deserialize `TreasuryAuthority`:
+	err = decoder.Decode(&obj.TreasuryAuthority)
+	if err != nil {
+		return err
+	}
+	// Deserialize `Vias`:
+	err = decoder.Decode(&obj.Vias)
 	if err != nil {
 		return err
 	}
@@ -827,10 +1041,12 @@ func (obj *MarketListing) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err 
 }
 
 type MintHash struct {
-	Mint      ag_solanago.PublicKey
-	Minter    ag_solanago.PublicKey
-	MintIndex uint64
-	Fulfilled int64
+	Mint        ag_solanago.PublicKey
+	Minter      ag_solanago.PublicKey
+	Batch       ag_solanago.PublicKey
+	ConfigIndex uint64
+	MintIndex   uint64
+	Fulfilled   int64
 }
 
 var MintHashDiscriminator = [8]byte{67, 89, 134, 71, 193, 178, 189, 85}
@@ -848,6 +1064,16 @@ func (obj MintHash) MarshalWithEncoder(encoder *ag_binary.Encoder) (err error) {
 	}
 	// Serialize `Minter` param:
 	err = encoder.Encode(obj.Minter)
+	if err != nil {
+		return err
+	}
+	// Serialize `Batch` param:
+	err = encoder.Encode(obj.Batch)
+	if err != nil {
+		return err
+	}
+	// Serialize `ConfigIndex` param:
+	err = encoder.Encode(obj.ConfigIndex)
 	if err != nil {
 		return err
 	}
@@ -885,6 +1111,16 @@ func (obj *MintHash) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err error
 	}
 	// Deserialize `Minter`:
 	err = decoder.Decode(&obj.Minter)
+	if err != nil {
+		return err
+	}
+	// Deserialize `Batch`:
+	err = decoder.Decode(&obj.Batch)
+	if err != nil {
+		return err
+	}
+	// Deserialize `ConfigIndex`:
+	err = decoder.Decode(&obj.ConfigIndex)
 	if err != nil {
 		return err
 	}

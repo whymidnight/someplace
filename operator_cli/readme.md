@@ -25,7 +25,7 @@ Path to `file` that will contain storefront listing metadata.
 ### Instance a Storefront
 Command:
 ```bash
-go run main.go config.yml instance
+go run main.go instance config.yml
 ```
 
 Executes required initialization commands to spin up a storefront using params in `config.yml`.
@@ -34,7 +34,7 @@ Executes required initialization commands to spin up a storefront using params i
 ### Report All Storefront Listings
 Command:
 ```bash
-go run main.go config.yml report
+go run main.go report_listings config.yml
 ```
 
 Writes a CSV formatted table into `ListingsTable` path in `config.yml`.
@@ -43,7 +43,25 @@ Writes a CSV formatted table into `ListingsTable` path in `config.yml`.
 ### Synchronise Storefront Listing State
 Command:
 ```bash
-go run main.go config.yml sync_listings
+go run main.go sync_listings config.yml
 ```
 
 Creates/Ammends listings of their respective records of `ListingsTable` in `config.yml`, writes a `ListingsTable` lockfile, and re-sources storefront listings for `ListingsTable`.
+
+
+### Synchronise Storefront Splits State
+Command:
+```bash
+go run main.go sync_storefront_splits config.yml
+```
+
+Creates/Ammends the splits of tender to their respective addresses in `Splits` in `config.yml` for storefront.
+
+
+### Synchronise Storefront Hash Map State
+Command:
+```bash
+go run main.go report_hashmap config.yml
+```
+
+Snapshots hashlists for every batch in storefront

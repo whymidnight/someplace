@@ -51,6 +51,53 @@ pub struct AmmendStorefrontSplits<'info> {
 }
 
 #[derive(Accounts)]
+pub struct EnableVias<'info> {
+    #[account(mut)]
+    pub oracle: Signer<'info>,
+    #[account(
+        init,
+        seeds = [oracle.key().as_ref(), VIA.as_ref()],
+        bump,
+        payer = oracle,
+        space = Vias::LEN
+    )]
+    pub vias: Account<'info, Vias>,
+    #[account(mut)]
+    pub treasury_authority: Account<'info, TreasuryAuthority>,
+    pub system_program: Program<'info, System>,
+
+}
+
+#[derive(Accounts)]
+pub struct EnableViaRarityTokenMinting<'info> {
+    #[account(mut)]
+    pub oracle: Signer<'info>,
+    #[account(mut)]
+    pub rarity_token_mint: Account<'info, Mint>,
+    #[account(mut)]
+    pub treasury_authority: Account<'info, TreasuryAuthority>,
+    #[account(
+        init,
+        seeds = [oracle.key().as_ref(), VIA.as_ref(), rarity_token_mint.key().as_ref()],
+        bump,
+        payer = oracle,
+        space = ViaMapping::LEN
+    )]
+    pub via_mapping: Account<'info, ViaMapping>,
+    #[account(
+        init,
+        seeds = [oracle.key().as_ref(), VIA.as_ref(), vias.vias.to_le_bytes().as_ref()],
+        bump,
+        payer = oracle,
+        space = Via::LEN
+    )]
+    pub via: Account<'info, Via>,
+    #[account(mut)]
+    pub vias: Account<'info, Vias>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
 #[instruction(candy_machine_creator: Pubkey)]
 pub struct AddWhitelistedCM<'info> {
     #[account(
@@ -330,18 +377,35 @@ pub struct MintNFT<'info> {
     pub initializer_token_account: Box<Account<'info, TokenAccount>>,
 }
 
+#[derive(Accounts)]
+#[instruction(creator_bump: u8)]
+pub struct RngNFTAfterQuest<'info> {
+    #[account(mut)]
+    pub via: Box<Account<'info, Via>>,
+}
 /// Mint a new NFT pseudo-randomly from the config array.
 #[derive(Accounts)]
 #[instruction(creator_bump: u8)]
-pub struct MintNFTRarity<'info> {
+pub struct MintNFTVia<'info> {
+    #[account(mut)]
+    pub via: Box<Account<'info, Via>>,
+    #[account(
+        init,
+        seeds = [oracle.key().as_ref(), VIA.as_ref(), via.mints.to_le_bytes().as_ref()],
+        bump,
+        payer = payer,
+        space = MintHash::LEN
+    )]
+    pub mint_hash: Box<Account<'info, MintHash>>,
     #[account(
     mut,
     has_one = oracle
     )]
-    pub candy_machine: Account<'info, Batch>,
+    pub candy_machine: Box<Account<'info, Batch>>,
     #[account(seeds=[PREFIX.as_ref(), candy_machine.key().as_ref()], bump=creator_bump)]
     /// CHECK: legacy
     pub candy_machine_creator: UncheckedAccount<'info>,
+    #[account(mut)]
     pub payer: Signer<'info>,
     #[account(mut)]
     /// CHECK: legacy
@@ -349,9 +413,24 @@ pub struct MintNFTRarity<'info> {
     #[account(mut)]
     /// CHECK: legacy
     pub metadata: UncheckedAccount<'info>,
-    #[account(mut)]
     /// CHECK: legacy
-    pub mint: UncheckedAccount<'info>,
+    #[account(
+        init,
+        seeds = [MINTYHASH.as_ref(), oracle.key().as_ref(), via.key().as_ref(), via.mints.to_le_bytes().as_ref()],
+        bump,
+        payer = payer,
+        mint::decimals = 0,
+        mint::authority = payer,
+        mint::freeze_authority = payer
+    )]
+    pub mint: Account<'info, Mint>,
+    #[account(
+        init,
+        payer = payer,
+        token::mint = mint,
+        token::authority = payer,  
+    )]
+    pub mint_ata: Account<'info, TokenAccount>,
     #[account(mut)]
     /// CHECK: legacy
     pub master_edition: UncheckedAccount<'info>,
@@ -366,12 +445,8 @@ pub struct MintNFTRarity<'info> {
     /// CHECK: legacy
     pub instruction_sysvar_account: UncheckedAccount<'info>,
     #[account(mut)]
-    pub treasury_token_account: Box<Account<'info, TokenAccount>>,
+    pub treasury_authority: Box<Account<'info, TreasuryAuthority>>,
     #[account(mut)]
     pub initializer_token_account: Box<Account<'info, TokenAccount>>,
-    #[account(mut)]
-    /// CHECK: legacy
-    pub nft_token_account: UncheckedAccount<'info>,
-    /// CHECK: legacy
-    pub recent_blockhashes: UncheckedAccount<'info>,
+    pub initializer_token_mint: Box<Account<'info, Mint>>,
 }

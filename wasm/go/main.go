@@ -4,6 +4,7 @@ import (
 	"syscall/js"
 
 	"creaturez.nft/wasm/v2/integrations"
+	"creaturez.nft/wasm/v2/integrations/storefront"
 )
 
 func main() {
@@ -11,13 +12,17 @@ func main() {
 
 	global := js.Global()
 
-	fetchNftsFunc := js.FuncOf(integrations.FetchNfts)
+	fetchNftsFunc := js.FuncOf(storefront.FetchNfts)
 	defer fetchNftsFunc.Release()
 	global.Set("reportCatalog", fetchNftsFunc)
 
-	FetchNftHashMapFunc := js.FuncOf(integrations.FetchNftHashMap)
+	FetchNftHashMapFunc := js.FuncOf(storefront.FetchNftHashMap)
 	defer FetchNftHashMapFunc.Release()
 	global.Set("reportHashMap", FetchNftHashMapFunc)
+
+	fetchListingsFunc := js.FuncOf(storefront.GetListings)
+	defer fetchListingsFunc.Release()
+	global.Set("getListings", fetchListingsFunc)
 
 	sellablesFunc := js.FuncOf(integrations.Sellables)
 	defer sellablesFunc.Release()
@@ -55,3 +60,4 @@ func main() {
 
 	<-done
 }
+

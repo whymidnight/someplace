@@ -595,6 +595,39 @@ func (obj *Split) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err error) {
 	return nil
 }
 
+type ViaMint struct {
+	MintAddress ag_solanago.PublicKey
+	Rarity      string
+}
+
+func (obj ViaMint) MarshalWithEncoder(encoder *ag_binary.Encoder) (err error) {
+	// Serialize `MintAddress` param:
+	err = encoder.Encode(obj.MintAddress)
+	if err != nil {
+		return err
+	}
+	// Serialize `Rarity` param:
+	err = encoder.Encode(obj.Rarity)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (obj *ViaMint) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err error) {
+	// Deserialize `MintAddress`:
+	err = decoder.Decode(&obj.MintAddress)
+	if err != nil {
+		return err
+	}
+	// Deserialize `Rarity`:
+	err = decoder.Decode(&obj.Rarity)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 type QuestError ag_binary.BorshEnum
 
 const (
