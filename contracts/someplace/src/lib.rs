@@ -183,9 +183,7 @@ pub mod someplace {
         listing.batch = ctx.accounts.batch.key();
         listing.oracle = ctx.accounts.oracle.key();
         listing.config_index = config_index;
-        listing.price = (price as f64
-            * 10_usize.pow(treasury_authority.treasury_decimals as u32) as f64)
-            as u64;
+        listing.price = price;
         listing.lifecycle_start = lifecycle_start;
         listing.is_listed = true;
         listing.mints = 0;
@@ -247,8 +245,14 @@ pub mod someplace {
         lifecycle_start: Option<u64>,
         price: Option<u64>,
     ) -> ProgramResult {
+        let oracle = &ctx.accounts.oracle;
         let listing = &mut ctx.accounts.listing;
         let treasury_authority = &ctx.accounts.treasury_authority;
+
+        if oracle.key() != treasury_authority.oracle {
+            return Err(QuestError::SuspiciousTransaction.into());
+        }
+
         listing.treasury_authority = treasury_authority.key();
         listing.batch = ctx.accounts.batch.key();
         listing.oracle = ctx.accounts.oracle.key();
@@ -261,9 +265,7 @@ pub mod someplace {
             listing.lifecycle_start = lifecycle_start.unwrap();
         }
         if price.is_some() {
-            listing.price = (price.unwrap() as f64
-                * 10_usize.pow(treasury_authority.treasury_decimals as u32) as f64)
-                as u64;
+            listing.price = price.unwrap();
         }
 
         Ok(())
@@ -309,18 +311,6 @@ pub mod someplace {
         authority.treasury_mint = treasury_mint.key();
         authority.treasury_token_account = treasury_token_account.key();
 
-        let cpi_accounts = Transfer {
-            from: ctx.accounts.oracle_token_account.to_account_info(),
-            to: treasury_token_account.to_account_info(),
-            authority: oracle.to_account_info(),
-        };
-        let cpi_program = ctx.accounts.token_program.to_account_info();
-        let cpi = CpiContext::new(cpi_program, cpi_accounts);
-        token::transfer(
-            cpi,
-            (100000 as f64 * 10_usize.pow(treasury_mint.decimals as u32) as f64) as u64,
-        )?;
-
         Ok(())
     }
 
@@ -353,6 +343,9 @@ pub mod someplace {
         }
 
         authority.splits = storefront_splits.clone();
+        if storefront_splits.len() == 0 {
+            return Ok(());
+        }
 
         let sum_shares = authority
             .splits
@@ -662,37 +655,42 @@ pub mod someplace {
             the first _n_ accounts must equal to their _n_ account in treasury.splits
             the remainder of remaining accounts present additional batches/candy machines
         */
-        while i < treasury_authority.splits.len() {
-            let split = &storefront_splits[i];
-            // the order of token address inclusion is respectful to
-            // the sequence in `treasury_authority.splits`
-            if ctx.remaining_accounts[i].key() != split.token_address {
-                return Err(QuestError::SuspiciousTransaction.into());
+        if treasury_authority.splits.len() > 0 {
+            while i < treasury_authority.splits.len() {
+                let split = &storefront_splits[i];
+                // the order of token address inclusion is respectful to
+                // the sequence in `treasury_authority.splits`
+                if ctx.remaining_accounts[i].key() != split.token_address {
+                    return Err(QuestError::SuspiciousTransaction.into());
+                }
+                if split.op_code == 0 {
+                    token::burn(
+                        CpiContext::new(
+                            ctx.accounts.token_program.to_account_info(),
+                            Burn {
+                                to: ctx.accounts.initializer_token_account.to_account_info(),
+                                mint: ctx.remaining_accounts[i].to_account_info(),
+                                authority: ctx.accounts.payer.to_account_info(),
+                            },
+                        ),
+                        (listing.price as f64 * ((split.share as u64) as f64 / 100.0)) as u64,
+                    )?;
+                }
+                if split.op_code == 1 {
+                    token::transfer(
+                        CpiContext::new(
+                            ctx.accounts.token_program.to_account_info(),
+                            Transfer {
+                                from: ctx.accounts.initializer_token_account.to_account_info(),
+                                to: ctx.remaining_accounts[i].to_account_info(),
+                                authority: ctx.accounts.payer.to_account_info(),
+                            },
+                        ),
+                        (listing.price as f64 * ((split.share as u64) as f64 / 100.0)) as u64,
+                    )?;
+                }
+                i += 1;
             }
-            let tender_cpx = Transfer {
-                from: ctx.accounts.initializer_token_account.to_account_info(),
-                to: ctx.remaining_accounts[i].to_account_info(),
-                authority: ctx.accounts.payer.to_account_info(),
-            };
-            let tender_cpx_context =
-                CpiContext::new(ctx.accounts.token_program.to_account_info(), tender_cpx);
-            msg!(
-                "foaat {} {} {} {} {}",
-                listing.price,
-                split.share,
-                (split.share as u64) as f64,
-                (split.share as u64) as f64 / 100.0,
-                ((listing.price as f64 * (split.share as u64) as f64 / 100.0)
-                    * 10_usize.pow(treasury_authority.treasury_decimals as u32) as f64)
-                    as u64,
-            );
-            token::transfer(
-                tender_cpx_context,
-                ((listing.price as f64 * (split.share as u64) as f64 / 100.0)
-                    * 10_usize.pow(treasury_authority.treasury_decimals as u32) as f64)
-                    as u64,
-            )?;
-            i += 1;
         }
 
         let config_line = get_config_line(&candy_machine, config_index as usize)?;
@@ -1055,3 +1053,4 @@ pub mod someplace {
         Ok(())
     }
 }
+

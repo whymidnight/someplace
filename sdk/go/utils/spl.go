@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math"
 	"net/http"
 
 	"github.com/gagliardetto/solana-go"
@@ -52,4 +53,12 @@ func FetchTokenMeta() []TokenListMeta {
 
 	return tokenList.Tokens
 
+}
+
+func ConvertUiAmountToAmount(uiAmount float64, decimals uint8) uint64 {
+	return uint64(uiAmount * math.Pow10(int(decimals)))
+}
+
+func ConvertAmountToUiAmount(amount uint64, decimals uint8) float64 {
+	return float64(amount) / math.Pow10(int(decimals))
 }

@@ -45,14 +45,12 @@ func main() {
 	// treasureCMs()
 	// treasureVerify()
 	// treasureVerifyCM()
-	/*
-		candyMachineAddresses := []solana.PublicKey{solana.MustPublicKeyFromBase58("2h1BiLfvU1DH2kyYDZ7KuQh81hSDU1iEQ5ZAbjqDjH8C"), solana.MustPublicKeyFromBase58("Ek4cSAY9JfJFaiVk5MQBZ9yWZiMs5ZHTjEX8Nbm3VutN")}
-		for _, candyMachine := range candyMachineAddresses {
-			for range make([]int, 20) {
-				mint(candyMachine)
-			}
+	candyMachineAddresses := []solana.PublicKey{solana.MustPublicKeyFromBase58("2h1BiLfvU1DH2kyYDZ7KuQh81hSDU1iEQ5ZAbjqDjH8C"), solana.MustPublicKeyFromBase58("Ek4cSAY9JfJFaiVk5MQBZ9yWZiMs5ZHTjEX8Nbm3VutN")}
+	for _, candyMachine := range candyMachineAddresses {
+		for range make([]int, 1) {
+			mint(candyMachine)
 		}
-	*/
+	}
 	// mintRare()
 	// holder_nft_metadata()
 	// burn()
@@ -75,8 +73,17 @@ func main() {
 	// startAndEndQuest()
 	// ETZoY7cJfD8N7EVx5tShRYS1vxgv3F4Dkavjb52kGRyj
 	// enableQuestsAndCreateQuest()
-	CreateAndAmmendEntitlementQuest()
+	// CreateAndAmmendEntitlementQuest()
+	// treasureVerify()
 
+}
+
+func treasureVerify() {
+	// BAP4H9Qki6GFtVjoDhWEFgBh9DwrUbMYrAdHqzu7a9nf
+	treasuryData := storefront.GetTreasuryAuthorityData(solana.MustPublicKeyFromBase58("BAP4H9Qki6GFtVjoDhWEFgBh9DwrUbMYrAdHqzu7a9nf"))
+	js, _ := json.Marshal(treasuryData)
+
+	fmt.Println(string(js))
 }
 
 func CreateNTokenAccountsOfMint(mint solana.PublicKey, amount int) {
