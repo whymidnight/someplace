@@ -11,7 +11,13 @@ pub const URL: (&str, &str) = (
 */
 
 pub const URL: (&str, &str) = (
+    "https://ssc-dao.genesysgo.net/",
+    "wss://ssc-dao.genesysgo.net/",
+);
+
+/*
+pub const URL: (&str, &str) = (
     "https://psytrbhymqlkfrhudd.dev.genesysgo.net:8899/",
     "wss://psytrbhymqlkfrhudd.dev.genesysgo.net:8900/",
 );
-
+*/

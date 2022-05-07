@@ -326,11 +326,11 @@ declare interface InitOutput {
   readonly instructions_constructor: () => number;
   readonly instructions_push: (a: number, b: number) => void;
   readonly __wbg_hash_free: (a: number) => void;
-  readonly __wbg_pubkey_free: (a: number) => void;
   readonly hash_constructor: (a: number, b: number) => void;
   readonly hash_toString: (a: number, b: number) => void;
   readonly hash_equals: (a: number, b: number) => number;
   readonly hash_toBytes: (a: number, b: number) => void;
+  readonly __wbg_pubkey_free: (a: number) => void;
   readonly __wbg_message_free: (a: number) => void;
   readonly __wbg_get_message_recent_blockhash: (a: number) => number;
   readonly __wbg_set_message_recent_blockhash: (a: number, b: number) => void;
@@ -338,12 +338,12 @@ declare interface InitOutput {
   readonly __wbindgen_malloc: (a: number) => number;
   readonly __wbindgen_realloc: (a: number, b: number, c: number) => number;
   readonly __wbindgen_export_2: WebAssembly.Table;
-  readonly _dyn_core__ops__function__FnMut_____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__h2924d9b283b99c0e: (a: number, b: number) => void;
-  readonly _dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__h51cf90af102bd259: (a: number, b: number, c: number) => void;
+  readonly _dyn_core__ops__function__FnMut_____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__h78353d403eba0619: (a: number, b: number) => void;
+  readonly _dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__he15f7b34958683ec: (a: number, b: number, c: number) => void;
   readonly __wbindgen_exn_store: (a: number) => void;
   readonly __wbindgen_add_to_stack_pointer: (a: number) => number;
   readonly __wbindgen_free: (a: number, b: number) => void;
-  readonly wasm_bindgen__convert__closures__invoke2_mut__h57f69b06e27a4d20: (a: number, b: number, c: number, d: number) => void;
+  readonly wasm_bindgen__convert__closures__invoke2_mut__hb2d6de7e8693a2a0: (a: number, b: number, c: number, d: number) => void;
 }
 
 /**
