@@ -494,10 +494,10 @@ async function writeIndices({
   while (offset < allIndicesInSlice.length) {
     let length = 0;
     let lineSize = 0;
-    let configLines = allIndicesInSlice.slice(offset, offset + 16);
+    let configLines = allIndicesInSlice.slice(offset, offset + 5);
     while (
       length < 850 &&
-      lineSize < 16 &&
+      lineSize < 5 &&
       configLines[lineSize] !== undefined
     ) {
       length +=
@@ -525,12 +525,13 @@ async function writeIndices({
   progressBar.start(poolArray.length, 0);
 
   const addConfigLines = async ({ index, configLines }) => {
+    console.log(configLines);
     const response = await anchorProgram.rpc.addConfigLines(
       index,
       configLines.map(i => ({
-        uri: cacheContent.items[keys[i]].link,
-        cardinality: cacheContent.items[keys[i]].cardinality,
         name: cacheContent.items[keys[i]].name,
+        cardinality: cacheContent.items[keys[i]].name,
+        uri: cacheContent.items[keys[i]].link,
       })),
               {
                 accounts: {
@@ -555,6 +556,7 @@ async function writeIndices({
   await PromisePool.withConcurrency(rateLimit || 5)
     .for(poolArray)
     .handleError(async (err, { index, configLines }) => {
+      console.error(err);
       log.error(
         `\nFailed writing indices ${index}-${
           keys[configLines[configLines.length - 1]]

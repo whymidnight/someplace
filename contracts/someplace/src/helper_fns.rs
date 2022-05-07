@@ -1,3 +1,4 @@
+use std::result::Result;
 use crate::constants::*;
 use crate::errors::*;
 use crate::state::*;
@@ -9,15 +10,15 @@ use mpl_token_metadata::state::{MAX_NAME_LENGTH, MAX_URI_LENGTH};
 use std::cell::RefMut;
 use std::str::FromStr;
 
-pub fn get_config_count(data: &RefMut<&mut [u8]>) -> core::result::Result<usize, ProgramError> {
+pub fn get_config_count(data: &RefMut<&mut [u8]>) -> Result<usize, Error> {
     return Ok(u32::from_le_bytes(*array_ref![data, CONFIG_ARRAY_START, 4]) as usize);
 }
 
-pub fn get_config_count_ref(data: &RefMut<&[u8]>) -> core::result::Result<usize, ProgramError> {
+pub fn get_config_count_ref(data: &RefMut<&[u8]>) -> Result<usize, Error> {
     return Ok(u32::from_le_bytes(*array_ref![data, CONFIG_ARRAY_START, 4]) as usize);
 }
 
-pub fn get_space_for_batch(data: CandyMachineData) -> core::result::Result<usize, ProgramError> {
+pub fn get_space_for_batch(data: CandyMachineData) -> Result<usize, Error> {
     let num = CONFIG_ARRAY_START
         + 32
         + 32
@@ -38,7 +39,7 @@ pub fn get_good_index(
     items_available: usize,
     index: usize,
     pos: bool,
-) -> core::result::Result<(usize, bool), ProgramError> {
+) -> Result<(usize, bool), Error> {
     let mut index_to_use = index;
     let mut taken = 1;
     let mut found = false;
@@ -116,7 +117,7 @@ pub fn get_good_index(
 pub fn get_config_line<'info>(
     a: &Account<'info, Batch>,
     index_to_use: usize,
-) -> core::result::Result<ConfigLine, ProgramError> {
+) -> Result<ConfigLine, Error> {
     msg!("Index is set to {:?}", index_to_use);
     let a_info = a.to_account_info();
     let mut arr = a_info.data.borrow_mut();
@@ -176,7 +177,7 @@ pub fn get_config_line<'info>(
 pub fn get_config_lines<'info>(
     arr: RefMut<&[u8]>,
     index_to_use: usize,
-) -> core::result::Result<ConfigLine, ProgramError> {
+) -> Result<ConfigLine, Error> {
     if arr[CONFIG_ARRAY_START + 4 + index_to_use * (CONFIG_LINE_SIZE)] == 1 {
         return Err(QuestError::CannotFindUsableConfigLine.into());
     }
@@ -228,7 +229,7 @@ pub fn get_config_lines<'info>(
 pub fn assert_valid_metadata(
     depo_metadata: &AccountInfo,
     depo_mint: &Pubkey,
-) -> core::result::Result<Metadata, ProgramError> {
+) -> Result<Metadata, ProgramError> {
     let metadata_program = Pubkey::from_str("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s").unwrap();
     assert_eq!(depo_metadata.owner, &metadata_program);
     let seed = &[

@@ -1,3 +1,4 @@
+use std::result::Result;
 use crate::constants::*;
 use crate::errors::*;
 use crate::helper_fns::*;
@@ -27,7 +28,7 @@ pub mod ix_accounts;
 pub mod state;
 pub mod structs;
 
-declare_id!("8otw5mCMUtwx91e7q7MAyhWoQVnc3Ng72qwDH58z72VW");
+declare_id!("GXFE4Ym1vxhbXLBx2RxqL5y1Ee3XyFUqDksD7tYjAi8z");
 
 #[program]
 pub mod someplace {
@@ -38,7 +39,7 @@ pub mod someplace {
         ctx: Context<InitMarketListing>,
         index: u64,
         price: u64,
-    ) -> ProgramResult {
+    ) -> Result<(), Error> {
         let market_authority = &mut ctx.accounts.market_authority;
         let market_listing = &mut ctx.accounts.market_listing;
         let nft_mint = &mut ctx.accounts.nft_mint;
@@ -75,7 +76,7 @@ pub mod someplace {
     pub fn fulfill_market_listing(
         ctx: Context<FulfillMarketListing>,
         market_authority_bump: u8,
-    ) -> ProgramResult {
+    ) -> Result<(), Error> {
         let market_authority = &mut ctx.accounts.market_authority;
         let market_listing = &mut ctx.accounts.market_listing;
         let nft_mint = &mut ctx.accounts.nft_mint;
@@ -130,7 +131,7 @@ pub mod someplace {
     pub fn unlist_market_listing(
         ctx: Context<UnlistMarketListing>,
         market_authority_bump: u8,
-    ) -> ProgramResult {
+    ) -> Result<(), Error> {
         let market_authority = &mut ctx.accounts.market_authority;
         let market_listing = &mut ctx.accounts.market_listing;
         let nft_mint = &mut ctx.accounts.nft_mint;
@@ -176,7 +177,7 @@ pub mod someplace {
         config_index: u64,
         price: u64,
         lifecycle_start: u64,
-    ) -> ProgramResult {
+    ) -> Result<(), Error> {
         let listing = &mut ctx.accounts.listing;
         let treasury_authority = &ctx.accounts.treasury_authority;
         listing.treasury_authority = treasury_authority.key();
@@ -191,7 +192,7 @@ pub mod someplace {
         Ok(())
     }
 
-    pub fn enable_vias(ctx: Context<EnableVias>) -> ProgramResult {
+    pub fn enable_vias(ctx: Context<EnableVias>) -> Result<(), Error> {
         let oracle = &ctx.accounts.oracle;
         let vias = &mut ctx.accounts.vias;
         let treasury_authority = &ctx.accounts.treasury_authority;
@@ -210,7 +211,7 @@ pub mod someplace {
     pub fn enable_via_rarity_token_minting(
         ctx: Context<EnableViaRarityTokenMinting>,
         rarity: String,
-    ) -> ProgramResult {
+    ) -> Result<(), Error> {
         let oracle = &ctx.accounts.oracle;
         let via = &mut ctx.accounts.via;
         let via_mapping = &mut ctx.accounts.via_mapping;
@@ -244,7 +245,7 @@ pub mod someplace {
         is_listed: Option<bool>,
         lifecycle_start: Option<u64>,
         price: Option<u64>,
-    ) -> ProgramResult {
+    ) -> Result<(), Error> {
         let oracle = &ctx.accounts.oracle;
         let listing = &mut ctx.accounts.listing;
         let treasury_authority = &ctx.accounts.treasury_authority;
@@ -271,7 +272,7 @@ pub mod someplace {
         Ok(())
     }
 
-    pub fn enable_batch_uploading(ctx: Context<EnableBatches>) -> ProgramResult {
+    pub fn enable_batch_uploading(ctx: Context<EnableBatches>) -> Result<(), Error> {
         let batches = &mut ctx.accounts.batches;
         batches.counter = 0;
         batches.oracle = ctx.accounts.oracle.key().clone();
@@ -283,7 +284,7 @@ pub mod someplace {
         ctx: Context<InitMarket>,
         market_uid: Pubkey,
         name: String,
-    ) -> ProgramResult {
+    ) -> Result<(), Error> {
         let market = &mut ctx.accounts.market_authority;
         let market_mint = &mut ctx.accounts.market_mint;
         let oracle = &ctx.accounts.oracle;
@@ -298,7 +299,7 @@ pub mod someplace {
         Ok(())
     }
 
-    pub fn init_treasury(ctx: Context<InitTreasury>, adornment: String) -> ProgramResult {
+    pub fn init_treasury(ctx: Context<InitTreasury>, adornment: String) -> Result<(), Error> {
         let authority = &mut ctx.accounts.treasury_authority;
         let treasury_token_account = &mut ctx.accounts.treasury_token_account;
         let treasury_mint = &mut ctx.accounts.treasury_token_mint;
@@ -318,7 +319,7 @@ pub mod someplace {
         ctx: Context<AddWhitelistedCM>,
         candy_machine_creator: Pubkey,
         candy_machine: Pubkey,
-    ) -> ProgramResult {
+    ) -> Result<(), Error> {
         let oracle = &ctx.accounts.oracle;
         let authority = &mut ctx.accounts.treasury_authority;
         let whitelist = &mut ctx.accounts.treasury_whitelist;
@@ -335,7 +336,7 @@ pub mod someplace {
     pub fn ammend_storefront_splits(
         ctx: Context<AmmendStorefrontSplits>,
         storefront_splits: Vec<Split>,
-    ) -> ProgramResult {
+    ) -> Result<(), Error> {
         let oracle = &ctx.accounts.oracle;
         let authority = &mut ctx.accounts.treasury_authority;
         if authority.oracle != oracle.key() {
@@ -363,7 +364,7 @@ pub mod someplace {
         Ok(())
     }
 
-    pub fn sell_for<'info>(ctx: Context<SellFor>, treasury_bump: u8) -> ProgramResult {
+    pub fn sell_for<'info>(ctx: Context<SellFor>, treasury_bump: u8) -> Result<(), Error> {
         let treasury_mint = &mut ctx.accounts.treasury_token_mint;
         let treasury_authority = &mut ctx.accounts.treasury_authority;
         let treasury_whitelist = &mut ctx.accounts.treasury_whitelist;
@@ -394,7 +395,7 @@ pub mod someplace {
 
         let burn_cpx = Burn {
             mint: depo_mint.to_account_info(),
-            to: ctx.accounts.depo_token_account.to_account_info(),
+            from: ctx.accounts.depo_token_account.to_account_info(),
             authority: ctx.accounts.initializer.to_account_info(),
         };
         let burn_cpx_context =
@@ -434,7 +435,7 @@ pub mod someplace {
         ctx: Context<Sync>,
         index: u32,
         config_lines: Vec<ConfigLine>,
-    ) -> ProgramResult {
+    ) -> Result<(), Error> {
         let candy_machine = &mut ctx.accounts.batch;
         let account = candy_machine.to_account_info();
         let current_count = get_config_count(&account.data.borrow_mut())?;
@@ -533,7 +534,7 @@ pub mod someplace {
         ctx: Context<NewBatch>,
         data: CandyMachineData,
         name: String,
-    ) -> ProgramResult {
+    ) -> Result<(), Error> {
         let batch_receipt = &mut ctx.accounts.batch_receipt;
         let batches = &mut ctx.accounts.batches;
         let candy_machine_account = &mut ctx.accounts.batch_account;
@@ -592,7 +593,7 @@ pub mod someplace {
         ctx: Context<'_, '_, '_, 'info, MintNFT<'info>>,
         creator_bump: u8,
         config_index: u64,
-    ) -> ProgramResult {
+    ) -> Result<(), Error> {
         let listing = &mut ctx.accounts.listing;
         let mint_hash = &mut ctx.accounts.mint_hash;
         let candy_machine = &mut ctx.accounts.candy_machine;
@@ -668,7 +669,7 @@ pub mod someplace {
                         CpiContext::new(
                             ctx.accounts.token_program.to_account_info(),
                             Burn {
-                                to: ctx.accounts.initializer_token_account.to_account_info(),
+                                from: ctx.accounts.initializer_token_account.to_account_info(),
                                 mint: ctx.remaining_accounts[i].to_account_info(),
                                 authority: ctx.accounts.payer.to_account_info(),
                             },
@@ -842,14 +843,14 @@ pub mod someplace {
     pub fn rng_nft_after_quest<'info>(
         _ctx: Context<'_, '_, '_, 'info, RngNFTAfterQuest<'info>>,
         _quest_id: u64,
-    ) -> ProgramResult {
+    ) -> Result<(), Error> {
         Ok(())
     }
 
     pub fn mint_nft_via<'info>(
         ctx: Context<'_, '_, '_, 'info, MintNFTVia<'info>>,
         creator_bump: u8,
-    ) -> ProgramResult {
+    ) -> Result<(), Error> {
         let via = &mut ctx.accounts.via;
         let mint_hash = &mut ctx.accounts.mint_hash;
         let candy_machine = &mut ctx.accounts.candy_machine;
@@ -893,7 +894,7 @@ pub mod someplace {
                 ctx.accounts.token_program.to_account_info(),
                 Burn {
                     mint: ctx.accounts.initializer_token_mint.to_account_info(),
-                    to: ctx.accounts.initializer_token_account.to_account_info(),
+                    from: ctx.accounts.initializer_token_account.to_account_info(),
                     authority: payer.to_account_info(),
                 },
             ),
