@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"creaturez.nft/someplace/storefront"
-	"creaturez.nft/utils"
 	"github.com/gagliardetto/solana-go"
 
 	"github.com/go-gota/gota/dataframe"
@@ -53,10 +52,8 @@ func ReportCatalog(oracle solana.PublicKey, listingsTableFile string) {
 			listing, _ := storefront.GetListing(oracle, batchReceiptData.BatchAccount, ii)
 			listingData := storefront.GetListingData(listing)
 			if listingData != nil {
-				treasury, _ := storefront.GetTreasuryAuthority(oracle)
-				treasuryData := storefront.GetTreasuryAuthorityData(treasury)
 				catalog.IsListed = listingData.IsListed
-				catalog.Price = utils.ConvertAmountToUiAmount(listingData.Price, treasuryData.TreasuryDecimals)
+				catalog.Price = int(listingData.Price)
 				catalog.LifecycleStart = int(listingData.LifecycleStart)
 				catalog.Mints = int(listingData.Mints)
 			}
@@ -81,4 +78,3 @@ func ReportCatalog(oracle solana.PublicKey, listingsTableFile string) {
 		panic(err)
 	}
 }
-

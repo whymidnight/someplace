@@ -67,11 +67,9 @@ func SyncListingRecord(oracle solana.PublicKey, record []string) (Catalog, *sola
 	} else {
 		panic(err)
 	}
-	if a, err := strconv.ParseFloat(record[3], 64); err == nil {
-		treasury, _ := storefront.GetTreasuryAuthority(oracle)
-		treasuryData := storefront.GetTreasuryAuthorityData(treasury)
-		fmt.Println(treasuryData)
-		catalog.Price = float64(utils.ConvertUiAmountToAmount(a, treasuryData.TreasuryDecimals))
+	if a, err := strconv.Atoi(record[3]); err == nil {
+		// catalog.Price = float64(utils.ConvertUiAmountToAmount(a, treasuryData.TreasuryDecimals))
+		catalog.Price = a
 	} else {
 		panic(err)
 	}
@@ -103,4 +101,3 @@ func SyncListingRecord(oracle solana.PublicKey, record []string) (Catalog, *sola
 
 	return catalog, resyncInstruction
 }
-
