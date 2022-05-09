@@ -530,7 +530,7 @@ async function writeIndices({
       index,
       configLines.map(i => ({
         name: cacheContent.items[keys[i]].name,
-        cardinality: cacheContent.items[keys[i]].name,
+        cardinality: cacheContent.items[keys[i]].cardinality,
         uri: cacheContent.items[keys[i]].link,
       })),
               {
