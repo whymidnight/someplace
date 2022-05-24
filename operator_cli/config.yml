@@ -1,5 +1,5 @@
 OraclePath: ./oracle.key
-TreasuryMint: 3XeA57a7vZSD6krvu5sGUN3A5SCKJmYadeoiQ8YmACbz
+TreasuryMint: F1bRLdFs8TKSi3yLuhqjBJtANWtYeVWH1LtAV7jhpGgG
 ListingsTable: ./listings.csv
 HashMap: ./hashmap.json
 Splits:

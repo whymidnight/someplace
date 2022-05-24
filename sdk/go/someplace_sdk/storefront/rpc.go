@@ -158,3 +158,37 @@ func GetViaMappingData(viaMapping solana.PublicKey) *someplace.ViaMapping {
 	return &data
 
 }
+
+func GetBatchCardinalitiesReportData(batchCardinalitiesReport solana.PublicKey) *someplace.BatchCardinalitiesReport {
+	rpcClient := rpc.New(someplace.NETWORK)
+	bin, _ := rpcClient.GetAccountInfoWithOpts(context.TODO(), batchCardinalitiesReport, &rpc.GetAccountInfoOpts{Commitment: "confirmed"})
+	if bin == nil {
+		return nil
+	}
+	var data someplace.BatchCardinalitiesReport
+	decoder := ag_binary.NewBorshDecoder(bin.Value.Data.GetBinary())
+	err := data.UnmarshalWithDecoder(decoder)
+	if err != nil {
+		panic(err)
+	}
+
+	return &data
+
+}
+
+func GetRewardTicketData(rewardTicket solana.PublicKey) *someplace.RewardTicket {
+	rpcClient := rpc.New(someplace.NETWORK)
+	bin, _ := rpcClient.GetAccountInfoWithOpts(context.TODO(), rewardTicket, &rpc.GetAccountInfoOpts{Commitment: "confirmed"})
+	if bin == nil {
+		return nil
+	}
+	var data someplace.RewardTicket
+	decoder := ag_binary.NewBorshDecoder(bin.Value.Data.GetBinary())
+	err := data.UnmarshalWithDecoder(decoder)
+	if err != nil {
+		panic(err)
+	}
+
+	return &data
+
+}

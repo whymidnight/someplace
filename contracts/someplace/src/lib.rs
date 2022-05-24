@@ -1,4 +1,3 @@
-use std::result::Result;
 use crate::constants::*;
 use crate::errors::*;
 use crate::helper_fns::*;
@@ -9,6 +8,7 @@ use anchor_lang::prelude::*;
 use anchor_lang::Discriminator;
 use anchor_spl::token::{self, Burn, MintTo, Transfer};
 use mpl_token_metadata::state::{MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH};
+use std::result::Result;
 
 use std::str::FromStr;
 
@@ -590,7 +590,7 @@ pub mod someplace {
     }
 
     pub fn mint_nft<'info>(
-        ctx: Context<'_, '_, '_, 'info, MintNFT<'info>>,
+        ctx: Context<'_, '_, '_, 'info, MintNFTListing<'info>>,
         creator_bump: u8,
         config_index: u64,
     ) -> Result<(), Error> {
@@ -840,40 +840,258 @@ pub mod someplace {
         Ok(())
     }
 
-    pub fn rng_nft_after_quest<'info>(
-        _ctx: Context<'_, '_, '_, 'info, RngNFTAfterQuest<'info>>,
-        _quest_id: u64,
+    pub fn report_batch_cardinalities<'info>(
+        ctx: Context<'_, '_, '_, 'info, ReportBatchCardinality<'info>>,
+        cardinalities_indices: Vec<Vec<u64>>,
+        cardinalities_keys: Vec<String>,
     ) -> Result<(), Error> {
+        let batch_cardinalities_report = &mut ctx.accounts.batch_cardinalities_report;
+        batch_cardinalities_report.batch_account = ctx.accounts.batch.key();
+        batch_cardinalities_report.cardinalities_keys = cardinalities_keys;
+        batch_cardinalities_report.cardinalities_indices = cardinalities_indices;
+
+        Ok(())
+    }
+
+    pub fn rng_nft_after_quest<'info>(
+        ctx: Context<'_, '_, '_, 'info, RngRewardIndiceNFTAfterQuest<'info>>,
+        _via_bump: u8,
+    ) -> Result<(), Error> {
+        const MIN_BATCH_RNG: u8 = 10;
+        // the intent is to psuedo-randomly
+        // here we need to determine the asset that will be rewarded
+        // using the `Reward` structure from a `Quest` account
+        // we can certify the provided `reward_mint` account
+        // pubkey used by parsing another programs data - ie questing.
+        let initializer = &ctx.accounts.initializer;
+        let via = &ctx.accounts.via;
+        let via_map = &ctx.accounts.via_map;
+        let reward_token_account = &ctx.accounts.reward_token_account;
+        let batches = &ctx.accounts.batches;
+        let quest = &ctx.accounts.quest;
+        let questee = &ctx.accounts.questee;
+        let reward_ticket = &mut ctx.accounts.reward_ticket;
+
+        if questee.owner != initializer.key() {
+            return Err(QuestError::SuspiciousTransaction.into());
+        }
+        if via.token_mint != reward_token_account.mint {
+            return Err(QuestError::SuspiciousTransaction.into());
+        }
+        if via.token_mint != via_map.token_mint {
+            return Err(QuestError::SuspiciousTransaction.into());
+        }
+        let reward_indice = quest
+            .rewards
+            .clone()
+            .into_iter()
+            .position(|n| n.mint_address == reward_token_account.mint);
+        if reward_indice.is_none() {
+            return Err(QuestError::SuspiciousTransaction.into());
+        }
+
+        // since this is via `ctx.remaining_accounts` - anyone of any intention
+        // could bias/specify these accounts in their own bot client.
+        // we should rather enforce a minimum batch count and assert that
+        // each are unique.
+        //
+        // when the minimum is unachievable, the number of batches are
+        // deferred from the global `batches.counter`.
+        //
+        // while batches are guaranteed to exceed the minimum rng count
+        // required, such that the batch contents are uniformly distributed,
+        // and that batch contents are rendered mintable upon upload,
+        // the only safety guarantee is a greater sample size to protect
+        // against bot inflicted biases as the rng behaviour is still
+        // guaranteed random with no predictability.
+        let remaining_accounts = 0;
+        let ctx_remaining_accounts = ctx.remaining_accounts;
+        let mut batch_accounts: Vec<AccountInfo> = Vec::new();
+        if batches.counter <= MIN_BATCH_RNG as u64 {
+            if ctx_remaining_accounts.len() != batches.counter as usize {
+                return Err(QuestError::SuspiciousTransaction.into());
+            }
+            batch_accounts =
+                ctx_remaining_accounts[remaining_accounts..ctx_remaining_accounts.len()].to_vec();
+        } else if batches.counter > MIN_BATCH_RNG as u64 {
+            if ctx_remaining_accounts.len() != MIN_BATCH_RNG as usize {
+                return Err(QuestError::SuspiciousTransaction.into());
+            }
+            batch_accounts =
+                ctx_remaining_accounts[remaining_accounts..MIN_BATCH_RNG as usize].to_vec();
+        }
+
+        assert_all_unique_account_infos(&batch_accounts)?;
+        let recent_slot_hash = &ctx.accounts.slot_hashes.data.borrow();
+        let most_recent = &recent_slot_hash[12..20];
+        // nominate for r/shittyprogramming 2022 meme of the year pls
+        let rng = u64::from_le_bytes([
+            most_recent[0],
+            most_recent[1],
+            most_recent[2],
+            most_recent[3],
+            most_recent[4],
+            most_recent[5],
+            most_recent[6],
+            most_recent[7],
+        ]);
+        let cardinality = via.rarity.clone();
+        let (batch_account, cardinality_index) =
+            get_valid_batch_for_cardinality(&batch_accounts, rng, cardinality.to_string())?;
+
+        reward_ticket.oracle = batches.oracle;
+        reward_ticket.initializer = initializer.key();
+        reward_ticket.batch_account = batch_account;
+        reward_ticket.cardinality_index = cardinality_index;
+        reward_ticket.fulfilled = 0;
+        reward_ticket.amount = quest.rewards[reward_indice.unwrap()].amount;
+        reward_ticket.reset = false;
+
+        Ok(())
+    }
+
+    pub fn recycle_rng_nft_after_quest<'info>(
+        ctx: Context<'_, '_, '_, 'info, RecycleRngRewardIndiceNFTAfterQuest<'info>>,
+        _via_bump: u8,
+    ) -> Result<(), Error> {
+        const MIN_BATCH_RNG: u8 = 10;
+        // the intent is to psuedo-randomly
+        // here we need to determine the asset that will be rewarded
+        // using the `Reward` structure from a `Quest` account
+        // we can certify the provided `reward_mint` account
+        // pubkey used by parsing another programs data - ie questing.
+        let initializer = &ctx.accounts.initializer;
+        let via = &ctx.accounts.via;
+        let via_map = &ctx.accounts.via_map;
+        let reward_token_account = &ctx.accounts.reward_token_account;
+        let batches = &ctx.accounts.batches;
+        let quest = &ctx.accounts.quest;
+        let reward_ticket = &mut ctx.accounts.reward_ticket;
+
+        if reward_ticket.amount == 0 {
+            return Err(QuestError::SuspiciousTransaction.into());
+        }
+        if via.token_mint != reward_token_account.mint {
+            return Err(QuestError::SuspiciousTransaction.into());
+        }
+        if via.token_mint != via_map.token_mint {
+            return Err(QuestError::SuspiciousTransaction.into());
+        }
+        if quest
+            .rewards
+            .clone()
+            .into_iter()
+            .position(|n| n.mint_address == reward_token_account.mint)
+            .is_none()
+        {
+            return Err(QuestError::SuspiciousTransaction.into());
+        }
+
+        // since this is via `ctx.remaining_accounts` - anyone of any intention
+        // could bias/specify these accounts in their own bot client.
+        // we should rather enforce a minimum batch count and assert that
+        // each are unique.
+        //
+        // when the minimum is unachievable, the number of batches are
+        // deferred from the global `batches.counter`.
+        //
+        // while batches are guaranteed to exceed the minimum rng count
+        // required, such that the batch contents are uniformly distributed,
+        // and that batch contents are rendered mintable upon upload,
+        // the only safety guarantee is a greater sample size to protect
+        // against bot inflicted biases as the rng behaviour is still
+        // guaranteed random with no predictability.
+        let remaining_accounts = 0;
+        let ctx_remaining_accounts = ctx.remaining_accounts;
+        let mut batch_accounts: Vec<AccountInfo> = Vec::new();
+        if batches.counter <= MIN_BATCH_RNG as u64 {
+            if ctx_remaining_accounts.len() != batches.counter as usize {
+                return Err(QuestError::SuspiciousTransaction.into());
+            }
+            batch_accounts =
+                ctx_remaining_accounts[remaining_accounts..ctx_remaining_accounts.len()].to_vec();
+        } else if batches.counter > MIN_BATCH_RNG as u64 {
+            if ctx_remaining_accounts.len() != MIN_BATCH_RNG as usize {
+                return Err(QuestError::SuspiciousTransaction.into());
+            }
+            batch_accounts =
+                ctx_remaining_accounts[remaining_accounts..MIN_BATCH_RNG as usize].to_vec();
+        }
+
+        assert_all_unique_account_infos(&batch_accounts)?;
+        let recent_slot_hash = &ctx.accounts.slot_hashes.data.borrow();
+        let most_recent = &recent_slot_hash[12..20];
+        // nominate for r/shittyprogramming 2022 meme of the year pls
+        let rng = u64::from_le_bytes([
+            most_recent[0],
+            most_recent[1],
+            most_recent[2],
+            most_recent[3],
+            most_recent[4],
+            most_recent[5],
+            most_recent[6],
+            most_recent[7],
+        ]);
+        let cardinality = via.rarity.clone();
+        let (batch_account, cardinality_index) =
+            get_valid_batch_for_cardinality(&batch_accounts, rng, cardinality.to_string())?;
+
+        if reward_ticket.oracle == batches.oracle {
+            return Err(QuestError::SuspiciousTransaction.into());
+        }
+        if reward_ticket.initializer == initializer.key() {
+            return Err(QuestError::SuspiciousTransaction.into());
+        }
+        reward_ticket.batch_account = batch_account;
+        reward_ticket.cardinality_index = cardinality_index;
+        reward_ticket.reset = false;
+
         Ok(())
     }
 
     pub fn mint_nft_via<'info>(
-        ctx: Context<'_, '_, '_, 'info, MintNFTVia<'info>>,
+        ctx: Context<'_, '_, '_, 'info, MintNFTViaRewardTicket<'info>>,
         creator_bump: u8,
+        _reward_ticket_bump: u8,
     ) -> Result<(), Error> {
+        let now = Clock::get()?.unix_timestamp;
+
         let via = &mut ctx.accounts.via;
         let mint_hash = &mut ctx.accounts.mint_hash;
+        let batch_cardinalities_report = &mut ctx.accounts.batch_cardinalities_report;
         let candy_machine = &mut ctx.accounts.candy_machine;
         let candy_machine_creator = &ctx.accounts.candy_machine_creator;
         let instruction_sysvar_account = &ctx.accounts.instruction_sysvar_account;
         let payer = &mut ctx.accounts.payer;
         let mint = &mut ctx.accounts.mint;
 
+        let reward_ticket = &mut ctx.accounts.reward_ticket;
+        if reward_ticket.initializer != payer.key() {
+            return Err(QuestError::InvalidInitializer.into());
+        }
+        if reward_ticket.batch_account != candy_machine.key() {
+            return Err(QuestError::SuspiciousCandyMachine.into());
+        }
+        if reward_ticket.amount == 0 {
+            return Err(QuestError::SuspiciousAmounts.into());
+        }
+        if reward_ticket.reset == true {
+            return Err(QuestError::IsReset.into());
+        }
+        if batch_cardinalities_report.batch_account != candy_machine.key() {
+            return Err(QuestError::InvalidCandyMachine.into());
+        }
+
         mint_hash.mint = mint.key();
         mint_hash.minter = payer.key();
         mint_hash.mint_index = via.mints;
-        mint_hash.fulfilled = Clock::get()?.unix_timestamp;
+        mint_hash.fulfilled = now;
 
         via.mints += 1;
 
-        let treasury_authority = &mut ctx.accounts.treasury_authority;
-        if treasury_authority.oracle != ctx.accounts.oracle.key() {
-            return Err(QuestError::SuspiciousTransaction.into());
-        }
-
         // ensures valid via for item in batch
         if via.oracle != ctx.accounts.oracle.key() {
-            return Err(QuestError::SuspiciousTransaction.into());
+            return Err(QuestError::SuspiciousOracle.into());
         }
 
         // assert_valid_go_live(payer, clock, candy_machine)?;
@@ -893,15 +1111,38 @@ pub mod someplace {
             CpiContext::new(
                 ctx.accounts.token_program.to_account_info(),
                 Burn {
-                    mint: ctx.accounts.initializer_token_mint.to_account_info(),
-                    from: ctx.accounts.initializer_token_account.to_account_info(),
+                    mint: ctx.accounts.reward_token_mint_account.to_account_info(),
+                    from: ctx.accounts.reward_token_account.to_account_info(),
                     authority: payer.to_account_info(),
                 },
             ),
             1,
         )?;
-        let config_index: u64 = 3;
-        let config_line = get_config_line(&candy_machine, config_index as usize)?;
+        reward_ticket.amount -= 1;
+
+        let recent_slot_hash = &ctx.accounts.slot_hashes.data.borrow();
+        let most_recent = &recent_slot_hash[12..20];
+        // nominate for r/shittyprogramming 2022 meme of the year pls
+        let rng = u64::from_le_bytes([
+            most_recent[0],
+            most_recent[1],
+            most_recent[2],
+            most_recent[3],
+            most_recent[4],
+            most_recent[5],
+            most_recent[6],
+            most_recent[7],
+        ]);
+        let config_index: u64 = rng
+            % batch_cardinalities_report.cardinalities_indices
+                [reward_ticket.cardinality_index as usize]
+                .len() as u64;
+        let config_line = get_config_line(
+            &candy_machine,
+            batch_cardinalities_report.cardinalities_indices
+                [reward_ticket.cardinality_index as usize][config_index as usize]
+                as usize,
+        )?;
 
         let cm_key = candy_machine.key();
         let authority_seeds = [PREFIX, cm_key.as_ref(), &[creator_bump]];
@@ -1033,25 +1274,8 @@ pub mod someplace {
             }
         }
 
-        /*
-        let tender_cpx = Transfer {
-            from: ctx.accounts.initializer_token_account.to_account_info(),
-            to: ctx.accounts.treasury_token_account.to_account_info(),
-            authority: ctx.accounts.payer.to_account_info(),
-        };
-        let tender_cpx_context =
-            CpiContext::new(ctx.accounts.token_program.to_account_info(), tender_cpx);
-        token::transfer(tender_cpx_context, listing.price)?;
-        */
-
-        /*
-            remaining accounts will be ordered such that -
-
-            the first _n_ accounts must equal to their _n_ account in treasury.splits
-            the remainder of remaining accounts present additional batches/candy machines
-        */
+        reward_ticket.reset = true;
 
         Ok(())
     }
 }
-

@@ -25,3 +25,6 @@ solana-program = "~1.9.5"
 spl-token = { version="3.1.1", features = [ "no-entrypoint" ] }
 spl-token-metadata = { version="0.0.1", features = [ "no-entrypoint" ] }
 serde = { version = "1.0.122", features = ["derive"] }
+Questing = { path = "../questing", features = ["no-entrypoint"] }
+borsh = "~0.9.2"
+itertools = "0.10.3"

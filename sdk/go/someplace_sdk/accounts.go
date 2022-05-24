@@ -158,6 +158,70 @@ func (obj *Batch) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err error) {
 	return nil
 }
 
+type BatchCardinalitiesReport struct {
+	BatchAccount         ag_solanago.PublicKey
+	CardinalitiesIndices [][]uint64
+	CardinalitiesKeys    []string
+}
+
+var BatchCardinalitiesReportDiscriminator = [8]byte{235, 87, 169, 149, 59, 19, 127, 131}
+
+func (obj BatchCardinalitiesReport) MarshalWithEncoder(encoder *ag_binary.Encoder) (err error) {
+	// Write account discriminator:
+	err = encoder.WriteBytes(BatchCardinalitiesReportDiscriminator[:], false)
+	if err != nil {
+		return err
+	}
+	// Serialize `BatchAccount` param:
+	err = encoder.Encode(obj.BatchAccount)
+	if err != nil {
+		return err
+	}
+	// Serialize `CardinalitiesIndices` param:
+	err = encoder.Encode(obj.CardinalitiesIndices)
+	if err != nil {
+		return err
+	}
+	// Serialize `CardinalitiesKeys` param:
+	err = encoder.Encode(obj.CardinalitiesKeys)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (obj *BatchCardinalitiesReport) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err error) {
+	// Read and check account discriminator:
+	{
+		discriminator, err := decoder.ReadTypeID()
+		if err != nil {
+			return err
+		}
+		if !discriminator.Equal(BatchCardinalitiesReportDiscriminator[:]) {
+			return fmt.Errorf(
+				"wrong discriminator: wanted %s, got %s",
+				"[235 87 169 149 59 19 127 131]",
+				fmt.Sprint(discriminator[:]))
+		}
+	}
+	// Deserialize `BatchAccount`:
+	err = decoder.Decode(&obj.BatchAccount)
+	if err != nil {
+		return err
+	}
+	// Deserialize `CardinalitiesIndices`:
+	err = decoder.Decode(&obj.CardinalitiesIndices)
+	if err != nil {
+		return err
+	}
+	// Deserialize `CardinalitiesKeys`:
+	err = decoder.Decode(&obj.CardinalitiesKeys)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 type BatchReceipt struct {
 	Id           uint64
 	Name         string
@@ -1131,6 +1195,114 @@ func (obj *MintHash) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err error
 	}
 	// Deserialize `Fulfilled`:
 	err = decoder.Decode(&obj.Fulfilled)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type RewardTicket struct {
+	Oracle           ag_solanago.PublicKey
+	Initializer      ag_solanago.PublicKey
+	BatchAccount     ag_solanago.PublicKey
+	Fulfilled        int64
+	CardinalityIndex uint64
+	Amount           uint64
+	Reset            bool
+}
+
+var RewardTicketDiscriminator = [8]byte{233, 255, 47, 77, 35, 10, 207, 111}
+
+func (obj RewardTicket) MarshalWithEncoder(encoder *ag_binary.Encoder) (err error) {
+	// Write account discriminator:
+	err = encoder.WriteBytes(RewardTicketDiscriminator[:], false)
+	if err != nil {
+		return err
+	}
+	// Serialize `Oracle` param:
+	err = encoder.Encode(obj.Oracle)
+	if err != nil {
+		return err
+	}
+	// Serialize `Initializer` param:
+	err = encoder.Encode(obj.Initializer)
+	if err != nil {
+		return err
+	}
+	// Serialize `BatchAccount` param:
+	err = encoder.Encode(obj.BatchAccount)
+	if err != nil {
+		return err
+	}
+	// Serialize `Fulfilled` param:
+	err = encoder.Encode(obj.Fulfilled)
+	if err != nil {
+		return err
+	}
+	// Serialize `CardinalityIndex` param:
+	err = encoder.Encode(obj.CardinalityIndex)
+	if err != nil {
+		return err
+	}
+	// Serialize `Amount` param:
+	err = encoder.Encode(obj.Amount)
+	if err != nil {
+		return err
+	}
+	// Serialize `Reset` param:
+	err = encoder.Encode(obj.Reset)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (obj *RewardTicket) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err error) {
+	// Read and check account discriminator:
+	{
+		discriminator, err := decoder.ReadTypeID()
+		if err != nil {
+			return err
+		}
+		if !discriminator.Equal(RewardTicketDiscriminator[:]) {
+			return fmt.Errorf(
+				"wrong discriminator: wanted %s, got %s",
+				"[233 255 47 77 35 10 207 111]",
+				fmt.Sprint(discriminator[:]))
+		}
+	}
+	// Deserialize `Oracle`:
+	err = decoder.Decode(&obj.Oracle)
+	if err != nil {
+		return err
+	}
+	// Deserialize `Initializer`:
+	err = decoder.Decode(&obj.Initializer)
+	if err != nil {
+		return err
+	}
+	// Deserialize `BatchAccount`:
+	err = decoder.Decode(&obj.BatchAccount)
+	if err != nil {
+		return err
+	}
+	// Deserialize `Fulfilled`:
+	err = decoder.Decode(&obj.Fulfilled)
+	if err != nil {
+		return err
+	}
+	// Deserialize `CardinalityIndex`:
+	err = decoder.Decode(&obj.CardinalityIndex)
+	if err != nil {
+		return err
+	}
+	// Deserialize `Amount`:
+	err = decoder.Decode(&obj.Amount)
+	if err != nil {
+		return err
+	}
+	// Deserialize `Reset`:
+	err = decoder.Decode(&obj.Reset)
 	if err != nil {
 		return err
 	}

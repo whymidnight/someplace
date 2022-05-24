@@ -13,12 +13,17 @@ extern crate base64;
 pub struct Opts {
     #[clap(long)]
     candy_machine: String,
+    #[clap(long)]
+    endpoint: String,
 }
 
 pub async fn get_candies() {
     let opts = Opts::parse();
     let mut candies: Vec<ConfigLine> = Vec::new();
-    let (rpc, wss) = URL;
+    let (rpc, wss) = (
+        format!("{}", opts.endpoint),
+        format!("wss://{}", opts.endpoint),
+    );
     let surf_client = surf::client();
     let client = Client::init(
         Cluster {

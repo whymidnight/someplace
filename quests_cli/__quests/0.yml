@@ -1,0 +1,25 @@
+Index: 0
+Name: Quest Zero
+Duration: 50
+WlCandyMachines:
+    - RCPqfb1KG1yfMghQvvUuH6abXHzU8PZV6eawQu5Ef5Q
+    - RCPqfb1KG1yfMghQvvUuH6abXHzU8PZV6eawQu5Ef5Q
+    - RCPqfb1KG1yfMghQvvUuH6abXHzU8PZV6eawQu5Ef5Q
+Entitlement: null
+Rewards:
+    - MintAddress: null
+      RngThreshold: 60
+      Amount: 1
+      Cardinality: rare
+    - MintAddress: null
+      RngThreshold: 30
+      Amount: 1
+      Cardinality: ballztastic
+    - MintAddress: null
+      RngThreshold: 10
+      Amount: 0
+      Cardinality: null
+Tender: null
+TenderSplits: null
+Xp: 2000
+Resync: true

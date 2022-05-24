@@ -5,34 +5,35 @@ import (
 
 	"creaturez.nft/questing"
 	"creaturez.nft/questing/quests"
-	"creaturez.nft/utils"
 	"github.com/gagliardetto/solana-go"
 )
 
-func CreateQuest(oracle solana.PrivateKey, questData questing.Quest) {
-	questsPda, _ := quests.GetQuests(oracle.PublicKey())
+func CreateQuest(oracle solana.PublicKey, questData questing.Quest) (solana.Instruction, uint64) {
+	questsPda, _ := quests.GetQuests(oracle)
 	questsData := quests.GetQuestsData(questsPda)
-	quest, _ := quests.GetQuest(oracle.PublicKey(), questsData.Quests)
+	quest, _ := quests.GetQuest(oracle, questsData.Quests)
 	createQuestIx := questing.NewCreateQuestInstructionBuilder().
 		SetDuration(questData.Duration).
-		SetOracleAccount(questData.Oracle).
+		SetName(questData.Name).
+		SetOracleAccount(oracle).
 		SetQuestAccount(quest).
 		SetQuestIndex(questsData.Quests).
 		SetQuestsAccount(questsPda).
-		SetRewards(questData.Rewards).
 		SetSystemProgramAccount(solana.SystemProgramID).
-		SetTender(*questData.Tender).
-		SetWlCandyMachines(questData.WlCandyMachines)
+		SetWlCandyMachines(questData.WlCandyMachines).
+		SetXp(questData.Xp).
+		SetEnabled(true).
+		SetRequiredLevel(questData.RequiredLevel)
+
+	if questData.Tender != nil {
+		createQuestIx.SetTender(*questData.Tender)
+		createQuestIx.SetTenderSplits(*questData.TenderSplits)
+	}
 
 	if e := createQuestIx.Validate(); e != nil {
 		fmt.Println(e.Error())
 		panic("...")
 	}
 
-	utils.SendTx(
-		"sell",
-		append(make([]solana.Instruction, 0), createQuestIx.Build()),
-		append(make([]solana.PrivateKey, 0), oracle),
-		oracle.PublicKey(),
-	)
+	return createQuestIx.Build(), questsData.Quests
 }

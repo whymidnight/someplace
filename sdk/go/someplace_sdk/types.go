@@ -640,10 +640,15 @@ const (
 	QuestErrorUuidMustBeExactly6Length
 	QuestErrorInvalidString
 	QuestErrorInvalidAccountData
+	QuestErrorSuspiciousAccounts
 	QuestErrorSuspiciousTransaction
 	QuestErrorSuspiciousTreasury
 	QuestErrorSuspiciousTreasuryMint
 	QuestErrorSuspiciousCandyMachine
+	QuestErrorSuspiciousAmounts
+	QuestErrorIsReset
+	QuestErrorInvalidCandyMachine
+	QuestErrorSuspiciousOracle
 )
 
 func (value QuestError) String() string {
@@ -666,6 +671,8 @@ func (value QuestError) String() string {
 		return "InvalidString"
 	case QuestErrorInvalidAccountData:
 		return "InvalidAccountData"
+	case QuestErrorSuspiciousAccounts:
+		return "SuspiciousAccounts"
 	case QuestErrorSuspiciousTransaction:
 		return "SuspiciousTransaction"
 	case QuestErrorSuspiciousTreasury:
@@ -674,6 +681,14 @@ func (value QuestError) String() string {
 		return "SuspiciousTreasuryMint"
 	case QuestErrorSuspiciousCandyMachine:
 		return "SuspiciousCandyMachine"
+	case QuestErrorSuspiciousAmounts:
+		return "SuspiciousAmounts"
+	case QuestErrorIsReset:
+		return "IsReset"
+	case QuestErrorInvalidCandyMachine:
+		return "InvalidCandyMachine"
+	case QuestErrorSuspiciousOracle:
+		return "SuspiciousOracle"
 	default:
 		return ""
 	}

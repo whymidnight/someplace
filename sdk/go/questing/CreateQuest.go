@@ -13,10 +13,14 @@ import (
 // CreateQuest is the `createQuest` instruction.
 type CreateQuest struct {
 	QuestIndex      *uint64
+	Name            *string
 	Duration        *int64
 	WlCandyMachines *[]ag_solanago.PublicKey
-	Rewards         *[]Reward
-	Tender          *Tender `bin:"optional"`
+	Tender          *Tender  `bin:"optional"`
+	TenderSplits    *[]Split `bin:"optional"`
+	Xp              *uint64
+	RequiredLevel   *uint64 `bin:"optional"`
+	Enabled         *bool
 
 	// [0] = [WRITE, SIGNER] oracle
 	//
@@ -42,6 +46,12 @@ func (inst *CreateQuest) SetQuestIndex(questIndex uint64) *CreateQuest {
 	return inst
 }
 
+// SetName sets the "name" parameter.
+func (inst *CreateQuest) SetName(name string) *CreateQuest {
+	inst.Name = &name
+	return inst
+}
+
 // SetDuration sets the "duration" parameter.
 func (inst *CreateQuest) SetDuration(duration int64) *CreateQuest {
 	inst.Duration = &duration
@@ -54,15 +64,33 @@ func (inst *CreateQuest) SetWlCandyMachines(wlCandyMachines []ag_solanago.Public
 	return inst
 }
 
-// SetRewards sets the "rewards" parameter.
-func (inst *CreateQuest) SetRewards(rewards []Reward) *CreateQuest {
-	inst.Rewards = &rewards
-	return inst
-}
-
 // SetTender sets the "tender" parameter.
 func (inst *CreateQuest) SetTender(tender Tender) *CreateQuest {
 	inst.Tender = &tender
+	return inst
+}
+
+// SetTenderSplits sets the "tenderSplits" parameter.
+func (inst *CreateQuest) SetTenderSplits(tenderSplits []Split) *CreateQuest {
+	inst.TenderSplits = &tenderSplits
+	return inst
+}
+
+// SetXp sets the "xp" parameter.
+func (inst *CreateQuest) SetXp(xp uint64) *CreateQuest {
+	inst.Xp = &xp
+	return inst
+}
+
+// SetRequiredLevel sets the "requiredLevel" parameter.
+func (inst *CreateQuest) SetRequiredLevel(requiredLevel uint64) *CreateQuest {
+	inst.RequiredLevel = &requiredLevel
+	return inst
+}
+
+// SetEnabled sets the "enabled" parameter.
+func (inst *CreateQuest) SetEnabled(enabled bool) *CreateQuest {
+	inst.Enabled = &enabled
 	return inst
 }
 
@@ -133,14 +161,20 @@ func (inst *CreateQuest) Validate() error {
 		if inst.QuestIndex == nil {
 			return errors.New("QuestIndex parameter is not set")
 		}
+		if inst.Name == nil {
+			return errors.New("Name parameter is not set")
+		}
 		if inst.Duration == nil {
 			return errors.New("Duration parameter is not set")
 		}
 		if inst.WlCandyMachines == nil {
 			return errors.New("WlCandyMachines parameter is not set")
 		}
-		if inst.Rewards == nil {
-			return errors.New("Rewards parameter is not set")
+		if inst.Xp == nil {
+			return errors.New("Xp parameter is not set")
+		}
+		if inst.Enabled == nil {
+			return errors.New("Enabled parameter is not set")
 		}
 	}
 
@@ -171,12 +205,16 @@ func (inst *CreateQuest) EncodeToTree(parent ag_treeout.Branches) {
 				ParentFunc(func(instructionBranch ag_treeout.Branches) {
 
 					// Parameters of the instruction:
-					instructionBranch.Child("Params[len=5]").ParentFunc(func(paramsBranch ag_treeout.Branches) {
+					instructionBranch.Child("Params[len=9]").ParentFunc(func(paramsBranch ag_treeout.Branches) {
 						paramsBranch.Child(ag_format.Param("     QuestIndex", *inst.QuestIndex))
+						paramsBranch.Child(ag_format.Param("           Name", *inst.Name))
 						paramsBranch.Child(ag_format.Param("       Duration", *inst.Duration))
 						paramsBranch.Child(ag_format.Param("WlCandyMachines", *inst.WlCandyMachines))
-						paramsBranch.Child(ag_format.Param("        Rewards", *inst.Rewards))
 						paramsBranch.Child(ag_format.Param("         Tender (OPT)", inst.Tender))
+						paramsBranch.Child(ag_format.Param("   TenderSplits (OPT)", inst.TenderSplits))
+						paramsBranch.Child(ag_format.Param("             Xp", *inst.Xp))
+						paramsBranch.Child(ag_format.Param("  RequiredLevel (OPT)", inst.RequiredLevel))
+						paramsBranch.Child(ag_format.Param("        Enabled", *inst.Enabled))
 					})
 
 					// Accounts of the instruction:
@@ -196,6 +234,11 @@ func (obj CreateQuest) MarshalWithEncoder(encoder *ag_binary.Encoder) (err error
 	if err != nil {
 		return err
 	}
+	// Serialize `Name` param:
+	err = encoder.Encode(obj.Name)
+	if err != nil {
+		return err
+	}
 	// Serialize `Duration` param:
 	err = encoder.Encode(obj.Duration)
 	if err != nil {
@@ -203,11 +246,6 @@ func (obj CreateQuest) MarshalWithEncoder(encoder *ag_binary.Encoder) (err error
 	}
 	// Serialize `WlCandyMachines` param:
 	err = encoder.Encode(obj.WlCandyMachines)
-	if err != nil {
-		return err
-	}
-	// Serialize `Rewards` param:
-	err = encoder.Encode(obj.Rewards)
 	if err != nil {
 		return err
 	}
@@ -229,11 +267,62 @@ func (obj CreateQuest) MarshalWithEncoder(encoder *ag_binary.Encoder) (err error
 			}
 		}
 	}
+	// Serialize `TenderSplits` param (optional):
+	{
+		if obj.TenderSplits == nil {
+			err = encoder.WriteBool(false)
+			if err != nil {
+				return err
+			}
+		} else {
+			err = encoder.WriteBool(true)
+			if err != nil {
+				return err
+			}
+			err = encoder.Encode(obj.TenderSplits)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	// Serialize `Xp` param:
+	err = encoder.Encode(obj.Xp)
+	if err != nil {
+		return err
+	}
+	// Serialize `RequiredLevel` param (optional):
+	{
+		if obj.RequiredLevel == nil {
+			err = encoder.WriteBool(false)
+			if err != nil {
+				return err
+			}
+		} else {
+			err = encoder.WriteBool(true)
+			if err != nil {
+				return err
+			}
+			err = encoder.Encode(obj.RequiredLevel)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	// Serialize `Enabled` param:
+	err = encoder.Encode(obj.Enabled)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 func (obj *CreateQuest) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err error) {
 	// Deserialize `QuestIndex`:
 	err = decoder.Decode(&obj.QuestIndex)
+	if err != nil {
+		return err
+	}
+	// Deserialize `Name`:
+	err = decoder.Decode(&obj.Name)
 	if err != nil {
 		return err
 	}
@@ -244,11 +333,6 @@ func (obj *CreateQuest) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err er
 	}
 	// Deserialize `WlCandyMachines`:
 	err = decoder.Decode(&obj.WlCandyMachines)
-	if err != nil {
-		return err
-	}
-	// Deserialize `Rewards`:
-	err = decoder.Decode(&obj.Rewards)
 	if err != nil {
 		return err
 	}
@@ -265,6 +349,42 @@ func (obj *CreateQuest) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err er
 			}
 		}
 	}
+	// Deserialize `TenderSplits` (optional):
+	{
+		ok, err := decoder.ReadBool()
+		if err != nil {
+			return err
+		}
+		if ok {
+			err = decoder.Decode(&obj.TenderSplits)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	// Deserialize `Xp`:
+	err = decoder.Decode(&obj.Xp)
+	if err != nil {
+		return err
+	}
+	// Deserialize `RequiredLevel` (optional):
+	{
+		ok, err := decoder.ReadBool()
+		if err != nil {
+			return err
+		}
+		if ok {
+			err = decoder.Decode(&obj.RequiredLevel)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	// Deserialize `Enabled`:
+	err = decoder.Decode(&obj.Enabled)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -272,10 +392,14 @@ func (obj *CreateQuest) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err er
 func NewCreateQuestInstruction(
 	// Parameters:
 	questIndex uint64,
+	name string,
 	duration int64,
 	wlCandyMachines []ag_solanago.PublicKey,
-	rewards []Reward,
 	tender Tender,
+	tenderSplits []Split,
+	xp uint64,
+	requiredLevel uint64,
+	enabled bool,
 	// Accounts:
 	oracle ag_solanago.PublicKey,
 	quest ag_solanago.PublicKey,
@@ -283,10 +407,14 @@ func NewCreateQuestInstruction(
 	systemProgram ag_solanago.PublicKey) *CreateQuest {
 	return NewCreateQuestInstructionBuilder().
 		SetQuestIndex(questIndex).
+		SetName(name).
 		SetDuration(duration).
 		SetWlCandyMachines(wlCandyMachines).
-		SetRewards(rewards).
 		SetTender(tender).
+		SetTenderSplits(tenderSplits).
+		SetXp(xp).
+		SetRequiredLevel(requiredLevel).
+		SetEnabled(enabled).
 		SetOracleAccount(oracle).
 		SetQuestAccount(quest).
 		SetQuestsAccount(quests).

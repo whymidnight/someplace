@@ -5,5 +5,5 @@ npx ts-node-script ./src/candy-machine-v2-cli.ts upload \
     -k ./oracle.key \
     -cp ./config.json \
     -c example \
-    -r https://api.devnet.solana.com \
+    -r https://psytrbhymqlkfrhudd.dev.genesysgo.net:8899/ \
     ./assets

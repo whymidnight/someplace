@@ -30,9 +30,17 @@ func init() {
 var (
 	Instruction_EnrollQuestor = ag_binary.TypeID([8]byte{24, 214, 177, 154, 205, 7, 26, 46})
 
+	Instruction_EnrollQuestee = ag_binary.TypeID([8]byte{142, 147, 49, 24, 11, 200, 232, 83})
+
+	Instruction_UpdateQuestee = ag_binary.TypeID([8]byte{56, 254, 41, 193, 39, 42, 198, 0})
+
 	Instruction_EnableQuests = ag_binary.TypeID([8]byte{196, 145, 208, 170, 4, 80, 81, 162})
 
 	Instruction_CreateQuest = ag_binary.TypeID([8]byte{112, 49, 32, 224, 255, 173, 5, 7})
+
+	Instruction_RegisterQuestReward = ag_binary.TypeID([8]byte{36, 83, 38, 130, 109, 90, 36, 132})
+
+	Instruction_ResetQuestRewards = ag_binary.TypeID([8]byte{200, 249, 246, 155, 171, 84, 8, 206})
 
 	Instruction_AmmendQuestWithEntitlement = ag_binary.TypeID([8]byte{125, 45, 154, 181, 164, 22, 218, 111})
 
@@ -46,10 +54,18 @@ func InstructionIDToName(id ag_binary.TypeID) string {
 	switch id {
 	case Instruction_EnrollQuestor:
 		return "EnrollQuestor"
+	case Instruction_EnrollQuestee:
+		return "EnrollQuestee"
+	case Instruction_UpdateQuestee:
+		return "UpdateQuestee"
 	case Instruction_EnableQuests:
 		return "EnableQuests"
 	case Instruction_CreateQuest:
 		return "CreateQuest"
+	case Instruction_RegisterQuestReward:
+		return "RegisterQuestReward"
+	case Instruction_ResetQuestRewards:
+		return "ResetQuestRewards"
 	case Instruction_AmmendQuestWithEntitlement:
 		return "AmmendQuestWithEntitlement"
 	case Instruction_StartQuest:
@@ -80,10 +96,22 @@ var InstructionImplDef = ag_binary.NewVariantDefinition(
 			"enroll_questor", (*EnrollQuestor)(nil),
 		},
 		{
+			"enroll_questee", (*EnrollQuestee)(nil),
+		},
+		{
+			"update_questee", (*UpdateQuestee)(nil),
+		},
+		{
 			"enable_quests", (*EnableQuests)(nil),
 		},
 		{
 			"create_quest", (*CreateQuest)(nil),
+		},
+		{
+			"register_quest_reward", (*RegisterQuestReward)(nil),
+		},
+		{
+			"reset_quest_rewards", (*ResetQuestRewards)(nil),
 		},
 		{
 			"ammend_quest_with_entitlement", (*AmmendQuestWithEntitlement)(nil),

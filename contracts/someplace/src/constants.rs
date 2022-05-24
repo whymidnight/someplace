@@ -44,3 +44,5 @@ pub const TREASURY_MINT: &[u8] = b"treasury_mint";
 pub const TREASURY_WHITELIST: &[u8] = b"treasury_whitelist";
 pub const MINTYHASH: &[u8] = b"mintyhash";
 pub const VIA: &[u8] = b"via";
+pub const BATCH_CARDINALITIES: &[u8] = b"batch_cardinalities";
+pub const VIA_MINT_HASH: &[u8] = b"via_mint_hash";

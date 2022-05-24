@@ -525,7 +525,7 @@ async function writeIndices({
   progressBar.start(poolArray.length, 0);
 
   const addConfigLines = async ({ index, configLines }) => {
-    console.log(configLines);
+    console.log(configLines, walletKeyPair.publicKey.toString(), candyMachine.toString());
     const response = await anchorProgram.rpc.addConfigLines(
       index,
       configLines.map(i => ({

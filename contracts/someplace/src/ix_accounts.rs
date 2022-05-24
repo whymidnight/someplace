@@ -5,6 +5,7 @@ use crate::structs::*;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::sysvar;
 use anchor_spl::token::{Mint, Token, TokenAccount};
+use questing::state::*;
 
 #[derive(Accounts)]
 #[instruction(config_index: u64)]
@@ -310,10 +311,29 @@ pub struct Sync<'info> {
     pub oracle: Signer<'info>,
 }
 
+/// Add multiple config lines to the candy machine.
+#[derive(Accounts)]
+#[instruction(cardinalities_indices: Vec<Vec<u64>>)]
+pub struct ReportBatchCardinality<'info> {
+    #[account(
+        init,
+        seeds = [BATCH_CARDINALITIES.as_ref(), batch.key().as_ref()],
+        bump,
+        payer = oracle,
+        space = BatchCardinalitiesReport::get_space(cardinalities_indices)
+    )]
+    pub batch_cardinalities_report: Box<Account<'info, BatchCardinalitiesReport>>,
+    #[account(has_one = oracle)]
+    pub batch: Account<'info, Batch>,
+    #[account(mut)]
+    pub oracle: Signer<'info>,
+    pub system_program: Program<'info, System>,
+}
+
 /// Mint a new NFT pseudo-randomly from the config array.
 #[derive(Accounts)]
 #[instruction(creator_bump: u8)]
-pub struct MintNFT<'info> {
+pub struct MintNFTListing<'info> {
     #[account(mut)]
     pub listing: Box<Account<'info, Listing>>,
     #[account(
@@ -378,28 +398,70 @@ pub struct MintNFT<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(creator_bump: u8)]
-pub struct RngNFTAfterQuest<'info> {
-    #[account(mut)]
+#[instruction(via_bump: u8)]
+pub struct RngRewardIndiceNFTAfterQuest<'info> {
+    pub reward_token_account: Account<'info, TokenAccount>,
+    #[account(
+        init,
+        seeds = [via.key().as_ref(), quest.key().as_ref(), questee.key().as_ref(), initializer.key().as_ref()],
+        bump,
+        payer = initializer,
+        space = RewardTicket::LEN
+    )]
+    pub reward_ticket: Box<Account<'info, RewardTicket>>,
+    pub batches: Account<'info, Batches>,
+    #[account(seeds = [batches.oracle.as_ref(), VIA.as_ref(), via_map.vias_index.to_le_bytes().as_ref()], bump = via_bump)]
     pub via: Box<Account<'info, Via>>,
+    pub via_map: Box<Account<'info, ViaMapping>>,
+    #[account(constraint = quest.to_account_info().owner == &questing::ID)]
+    pub quest: Box<Account<'info, Quest>>,
+    #[account(constraint = questee.to_account_info().owner == &questing::ID)]
+    pub questee: Box<Account<'info, Questee>>,
+    #[account(mut)]
+    pub initializer: Signer<'info>,
+    pub system_program: Program<'info, System>,
+    /// CHECK: am lazy
+    pub slot_hashes: UncheckedAccount<'info>,
 }
+
+#[derive(Accounts)]
+#[instruction(via_bump: u8)]
+pub struct RecycleRngRewardIndiceNFTAfterQuest<'info> {
+    pub reward_token_account: Account<'info, TokenAccount>,
+    pub reward_ticket: Box<Account<'info, RewardTicket>>,
+    pub batches: Account<'info, Batches>,
+    #[account(seeds = [batches.oracle.as_ref(), VIA.as_ref(), via_map.vias_index.to_le_bytes().as_ref()], bump = via_bump)]
+    pub via: Box<Account<'info, Via>>,
+    pub via_map: Box<Account<'info, ViaMapping>>,
+    #[account(constraint = quest.to_account_info().owner == &questing::ID)]
+    pub quest: Box<Account<'info, Quest>>,
+    #[account(mut)]
+    pub initializer: Signer<'info>,
+    pub system_program: Program<'info, System>,
+    /// CHECK: am lazy
+    pub slot_hashes: UncheckedAccount<'info>,
+}
+
 /// Mint a new NFT pseudo-randomly from the config array.
 #[derive(Accounts)]
-#[instruction(creator_bump: u8)]
-pub struct MintNFTVia<'info> {
+#[instruction(creator_bump: u8, reward_ticket_bump: u8)]
+pub struct MintNFTViaRewardTicket<'info> {
+    #[account(mut, has_one = oracle)]
+    pub reward_ticket: Box<Account<'info, RewardTicket>>,
     #[account(mut)]
     pub via: Box<Account<'info, Via>>,
     #[account(
         init,
-        seeds = [oracle.key().as_ref(), VIA.as_ref(), via.mints.to_le_bytes().as_ref()],
+        seeds = [oracle.key().as_ref(), VIA.as_ref(), VIA_MINT_HASH.as_ref(), via.mints.to_le_bytes().as_ref()],
         bump,
         payer = payer,
         space = MintHash::LEN
     )]
     pub mint_hash: Box<Account<'info, MintHash>>,
+    pub batch_cardinalities_report: Box<Account<'info, BatchCardinalitiesReport>>,
     #[account(
-    mut,
-    has_one = oracle
+        mut,
+        has_one = oracle
     )]
     pub candy_machine: Box<Account<'info, Batch>>,
     #[account(seeds=[PREFIX.as_ref(), candy_machine.key().as_ref()], bump=creator_bump)]
@@ -445,8 +507,9 @@ pub struct MintNFTVia<'info> {
     /// CHECK: legacy
     pub instruction_sysvar_account: UncheckedAccount<'info>,
     #[account(mut)]
-    pub treasury_authority: Box<Account<'info, TreasuryAuthority>>,
+    pub reward_token_account: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
-    pub initializer_token_account: Box<Account<'info, TokenAccount>>,
-    pub initializer_token_mint: Box<Account<'info, Mint>>,
+    pub reward_token_mint_account: Box<Account<'info, Mint>>,
+    /// CHECK: am lazy
+    pub slot_hashes: UncheckedAccount<'info>,
 }

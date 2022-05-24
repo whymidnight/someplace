@@ -60,6 +60,12 @@ var (
 
 	Instruction_MintNft = ag_binary.TypeID([8]byte{211, 57, 6, 167, 15, 219, 35, 251})
 
+	Instruction_ReportBatchCardinalities = ag_binary.TypeID([8]byte{110, 108, 251, 247, 202, 211, 70, 22})
+
+	Instruction_RngNftAfterQuest = ag_binary.TypeID([8]byte{123, 109, 214, 4, 248, 90, 181, 209})
+
+	Instruction_RecycleRngNftAfterQuest = ag_binary.TypeID([8]byte{88, 172, 111, 156, 214, 105, 226, 47})
+
 	Instruction_MintNftVia = ag_binary.TypeID([8]byte{218, 59, 166, 55, 110, 99, 20, 170})
 )
 
@@ -98,6 +104,12 @@ func InstructionIDToName(id ag_binary.TypeID) string {
 		return "InitializeCandyMachine"
 	case Instruction_MintNft:
 		return "MintNft"
+	case Instruction_ReportBatchCardinalities:
+		return "ReportBatchCardinalities"
+	case Instruction_RngNftAfterQuest:
+		return "RngNftAfterQuest"
+	case Instruction_RecycleRngNftAfterQuest:
+		return "RecycleRngNftAfterQuest"
 	case Instruction_MintNftVia:
 		return "MintNftVia"
 	default:
@@ -167,6 +179,15 @@ var InstructionImplDef = ag_binary.NewVariantDefinition(
 		},
 		{
 			"mint_nft", (*MintNft)(nil),
+		},
+		{
+			"report_batch_cardinalities", (*ReportBatchCardinalities)(nil),
+		},
+		{
+			"rng_nft_after_quest", (*RngNftAfterQuest)(nil),
+		},
+		{
+			"recycle_rng_nft_after_quest", (*RecycleRngNftAfterQuest)(nil),
 		},
 		{
 			"mint_nft_via", (*MintNftVia)(nil),

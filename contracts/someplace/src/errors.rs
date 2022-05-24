@@ -20,6 +20,8 @@ pub enum QuestError {
     InvalidString,
     #[msg("Invalid account data")]
     InvalidAccountData,
+    #[msg("Suspicious Accounts")]
+    SuspiciousAccounts,
     #[msg("Suspicious Transaction")]
     SuspiciousTransaction,
     #[msg("Suspicious Treasury")]
@@ -28,4 +30,12 @@ pub enum QuestError {
     SuspiciousTreasuryMint,
     #[msg("Suspicious Candy Machine")]
     SuspiciousCandyMachine,
+    #[msg("Suspicious Amounts")]
+    SuspiciousAmounts,
+    #[msg("Is Reset")]
+    IsReset,
+    #[msg("Invalid Candy Batch")]
+    InvalidCandyMachine,
+    #[msg("Suspicious Oracle")]
+    SuspiciousOracle,
 }

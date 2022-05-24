@@ -1,15 +1,36 @@
 package storefront
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"os"
+	"os/exec"
 
+	"creaturez.nft/someplace"
 	"creaturez.nft/someplace/storefront"
 	"github.com/gagliardetto/solana-go"
 
 	"github.com/go-gota/gota/dataframe"
 )
+
+func reportCatalogFromCandyMachine(candyMachine solana.PublicKey) []ConfigLine {
+	cmd := exec.Command("./libs/someplace_rusty", "--candy-machine", candyMachine.String(), "--endpoint", someplace.NETWORK)
+	cmd.Stderr = os.Stderr
+	data, err := cmd.Output()
+	if err != nil {
+		log.Fatalf("failed to call cmd.Run(): %v", err)
+	}
+
+	var configLines []ConfigLine
+	err = json.Unmarshal(data, &configLines)
+	if err != nil {
+		panic(err)
+	}
+
+	return configLines
+}
 
 // ReportCatalog will report all the listings under `marketUid` and `oracle`.
 func ReportCatalog(oracle solana.PublicKey, listingsTableFile string) {

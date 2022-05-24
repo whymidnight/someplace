@@ -9,3 +9,9 @@ type Catalog struct {
 	Mints          int    `json:"mints"`
 	Resync         bool   `json:"resync"`
 }
+
+type ConfigLine struct {
+	Name        string `json:"name"`
+	Cardinality string `json:"cardinality"`
+	URI         string `json:"uri"`
+}

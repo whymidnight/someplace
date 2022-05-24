@@ -9,6 +9,7 @@ import (
 )
 
 type QuestAccount struct {
+	Index              uint64
 	StartTime          int64
 	EndTime            int64
 	DepositTokenAmount ag_solanago.PublicKey
@@ -20,6 +21,11 @@ var QuestAccountDiscriminator = [8]byte{150, 179, 23, 90, 199, 60, 121, 92}
 func (obj QuestAccount) MarshalWithEncoder(encoder *ag_binary.Encoder) (err error) {
 	// Write account discriminator:
 	err = encoder.WriteBytes(QuestAccountDiscriminator[:], false)
+	if err != nil {
+		return err
+	}
+	// Serialize `Index` param:
+	err = encoder.Encode(obj.Index)
 	if err != nil {
 		return err
 	}
@@ -59,6 +65,11 @@ func (obj *QuestAccount) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err e
 				"[150 179 23 90 199 60 121 92]",
 				fmt.Sprint(discriminator[:]))
 		}
+	}
+	// Deserialize `Index`:
+	err = decoder.Decode(&obj.Index)
+	if err != nil {
+		return err
 	}
 	// Deserialize `StartTime`:
 	err = decoder.Decode(&obj.StartTime)
@@ -137,13 +148,19 @@ func (obj *Quests) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err error) 
 }
 
 type Quest struct {
+	Enabled         bool
 	Index           uint64
+	Name            string
 	Duration        int64
 	Oracle          ag_solanago.PublicKey
+	RequiredLevel   uint64
+	RequiredXp      uint64
 	WlCandyMachines []ag_solanago.PublicKey
 	Entitlement     *Reward `bin:"optional"`
 	Rewards         []Reward
-	Tender          *Tender `bin:"optional"`
+	Tender          *Tender  `bin:"optional"`
+	TenderSplits    *[]Split `bin:"optional"`
+	Xp              uint64
 }
 
 var QuestDiscriminator = [8]byte{68, 78, 51, 23, 204, 27, 76, 132}
@@ -154,8 +171,18 @@ func (obj Quest) MarshalWithEncoder(encoder *ag_binary.Encoder) (err error) {
 	if err != nil {
 		return err
 	}
+	// Serialize `Enabled` param:
+	err = encoder.Encode(obj.Enabled)
+	if err != nil {
+		return err
+	}
 	// Serialize `Index` param:
 	err = encoder.Encode(obj.Index)
+	if err != nil {
+		return err
+	}
+	// Serialize `Name` param:
+	err = encoder.Encode(obj.Name)
 	if err != nil {
 		return err
 	}
@@ -166,6 +193,16 @@ func (obj Quest) MarshalWithEncoder(encoder *ag_binary.Encoder) (err error) {
 	}
 	// Serialize `Oracle` param:
 	err = encoder.Encode(obj.Oracle)
+	if err != nil {
+		return err
+	}
+	// Serialize `RequiredLevel` param:
+	err = encoder.Encode(obj.RequiredLevel)
+	if err != nil {
+		return err
+	}
+	// Serialize `RequiredXp` param:
+	err = encoder.Encode(obj.RequiredXp)
 	if err != nil {
 		return err
 	}
@@ -215,6 +252,29 @@ func (obj Quest) MarshalWithEncoder(encoder *ag_binary.Encoder) (err error) {
 			}
 		}
 	}
+	// Serialize `TenderSplits` param (optional):
+	{
+		if obj.TenderSplits == nil {
+			err = encoder.WriteBool(false)
+			if err != nil {
+				return err
+			}
+		} else {
+			err = encoder.WriteBool(true)
+			if err != nil {
+				return err
+			}
+			err = encoder.Encode(obj.TenderSplits)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	// Serialize `Xp` param:
+	err = encoder.Encode(obj.Xp)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -232,8 +292,18 @@ func (obj *Quest) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err error) {
 				fmt.Sprint(discriminator[:]))
 		}
 	}
+	// Deserialize `Enabled`:
+	err = decoder.Decode(&obj.Enabled)
+	if err != nil {
+		return err
+	}
 	// Deserialize `Index`:
 	err = decoder.Decode(&obj.Index)
+	if err != nil {
+		return err
+	}
+	// Deserialize `Name`:
+	err = decoder.Decode(&obj.Name)
 	if err != nil {
 		return err
 	}
@@ -244,6 +314,16 @@ func (obj *Quest) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err error) {
 	}
 	// Deserialize `Oracle`:
 	err = decoder.Decode(&obj.Oracle)
+	if err != nil {
+		return err
+	}
+	// Deserialize `RequiredLevel`:
+	err = decoder.Decode(&obj.RequiredLevel)
+	if err != nil {
+		return err
+	}
+	// Deserialize `RequiredXp`:
+	err = decoder.Decode(&obj.RequiredXp)
 	if err != nil {
 		return err
 	}
@@ -283,12 +363,30 @@ func (obj *Quest) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err error) {
 			}
 		}
 	}
+	// Deserialize `TenderSplits` (optional):
+	{
+		ok, err := decoder.ReadBool()
+		if err != nil {
+			return err
+		}
+		if ok {
+			err = decoder.Decode(&obj.TenderSplits)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	// Deserialize `Xp`:
+	err = decoder.Decode(&obj.Xp)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 type Questor struct {
 	Initializer ag_solanago.PublicKey
-	Quests      uint64
+	Xp          uint64
 }
 
 var QuestorDiscriminator = [8]byte{103, 165, 162, 230, 97, 74, 133, 76}
@@ -304,8 +402,8 @@ func (obj Questor) MarshalWithEncoder(encoder *ag_binary.Encoder) (err error) {
 	if err != nil {
 		return err
 	}
-	// Serialize `Quests` param:
-	err = encoder.Encode(obj.Quests)
+	// Serialize `Xp` param:
+	err = encoder.Encode(obj.Xp)
 	if err != nil {
 		return err
 	}
@@ -331,8 +429,147 @@ func (obj *Questor) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err error)
 	if err != nil {
 		return err
 	}
+	// Deserialize `Xp`:
+	err = decoder.Decode(&obj.Xp)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type Questee struct {
+	Owner          ag_solanago.PublicKey
+	PixelballzMint ag_solanago.PublicKey
+	Quests         uint64
+	Xp             uint64
+}
+
+var QuesteeDiscriminator = [8]byte{239, 51, 124, 161, 92, 184, 172, 208}
+
+func (obj Questee) MarshalWithEncoder(encoder *ag_binary.Encoder) (err error) {
+	// Write account discriminator:
+	err = encoder.WriteBytes(QuesteeDiscriminator[:], false)
+	if err != nil {
+		return err
+	}
+	// Serialize `Owner` param:
+	err = encoder.Encode(obj.Owner)
+	if err != nil {
+		return err
+	}
+	// Serialize `PixelballzMint` param:
+	err = encoder.Encode(obj.PixelballzMint)
+	if err != nil {
+		return err
+	}
+	// Serialize `Quests` param:
+	err = encoder.Encode(obj.Quests)
+	if err != nil {
+		return err
+	}
+	// Serialize `Xp` param:
+	err = encoder.Encode(obj.Xp)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (obj *Questee) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err error) {
+	// Read and check account discriminator:
+	{
+		discriminator, err := decoder.ReadTypeID()
+		if err != nil {
+			return err
+		}
+		if !discriminator.Equal(QuesteeDiscriminator[:]) {
+			return fmt.Errorf(
+				"wrong discriminator: wanted %s, got %s",
+				"[239 51 124 161 92 184 172 208]",
+				fmt.Sprint(discriminator[:]))
+		}
+	}
+	// Deserialize `Owner`:
+	err = decoder.Decode(&obj.Owner)
+	if err != nil {
+		return err
+	}
+	// Deserialize `PixelballzMint`:
+	err = decoder.Decode(&obj.PixelballzMint)
+	if err != nil {
+		return err
+	}
 	// Deserialize `Quests`:
 	err = decoder.Decode(&obj.Quests)
+	if err != nil {
+		return err
+	}
+	// Deserialize `Xp`:
+	err = decoder.Decode(&obj.Xp)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type QuestQuesteeEndReceipt struct {
+	Owner          ag_solanago.PublicKey
+	PixelballzMint ag_solanago.PublicKey
+	RewardMint     ag_solanago.PublicKey
+}
+
+var QuestQuesteeEndReceiptDiscriminator = [8]byte{229, 239, 65, 24, 83, 169, 199, 238}
+
+func (obj QuestQuesteeEndReceipt) MarshalWithEncoder(encoder *ag_binary.Encoder) (err error) {
+	// Write account discriminator:
+	err = encoder.WriteBytes(QuestQuesteeEndReceiptDiscriminator[:], false)
+	if err != nil {
+		return err
+	}
+	// Serialize `Owner` param:
+	err = encoder.Encode(obj.Owner)
+	if err != nil {
+		return err
+	}
+	// Serialize `PixelballzMint` param:
+	err = encoder.Encode(obj.PixelballzMint)
+	if err != nil {
+		return err
+	}
+	// Serialize `RewardMint` param:
+	err = encoder.Encode(obj.RewardMint)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (obj *QuestQuesteeEndReceipt) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err error) {
+	// Read and check account discriminator:
+	{
+		discriminator, err := decoder.ReadTypeID()
+		if err != nil {
+			return err
+		}
+		if !discriminator.Equal(QuestQuesteeEndReceiptDiscriminator[:]) {
+			return fmt.Errorf(
+				"wrong discriminator: wanted %s, got %s",
+				"[229 239 65 24 83 169 199 238]",
+				fmt.Sprint(discriminator[:]))
+		}
+	}
+	// Deserialize `Owner`:
+	err = decoder.Decode(&obj.Owner)
+	if err != nil {
+		return err
+	}
+	// Deserialize `PixelballzMint`:
+	err = decoder.Decode(&obj.PixelballzMint)
+	if err != nil {
+		return err
+	}
+	// Deserialize `RewardMint`:
+	err = decoder.Decode(&obj.RewardMint)
 	if err != nil {
 		return err
 	}

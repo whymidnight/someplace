@@ -9,8 +9,9 @@ import (
 
 type Reward struct {
 	MintAddress  ag_solanago.PublicKey
-	RngThreshold *uint8 `bin:"optional"`
-	Amount       uint8
+	RngThreshold uint8
+	Amount       uint64
+	Cardinality  *string `bin:"optional"`
 }
 
 func (obj Reward) MarshalWithEncoder(encoder *ag_binary.Encoder) (err error) {
@@ -19,9 +20,19 @@ func (obj Reward) MarshalWithEncoder(encoder *ag_binary.Encoder) (err error) {
 	if err != nil {
 		return err
 	}
-	// Serialize `RngThreshold` param (optional):
+	// Serialize `RngThreshold` param:
+	err = encoder.Encode(obj.RngThreshold)
+	if err != nil {
+		return err
+	}
+	// Serialize `Amount` param:
+	err = encoder.Encode(obj.Amount)
+	if err != nil {
+		return err
+	}
+	// Serialize `Cardinality` param (optional):
 	{
-		if obj.RngThreshold == nil {
+		if obj.Cardinality == nil {
 			err = encoder.WriteBool(false)
 			if err != nil {
 				return err
@@ -31,16 +42,11 @@ func (obj Reward) MarshalWithEncoder(encoder *ag_binary.Encoder) (err error) {
 			if err != nil {
 				return err
 			}
-			err = encoder.Encode(obj.RngThreshold)
+			err = encoder.Encode(obj.Cardinality)
 			if err != nil {
 				return err
 			}
 		}
-	}
-	// Serialize `Amount` param:
-	err = encoder.Encode(obj.Amount)
-	if err != nil {
-		return err
 	}
 	return nil
 }
@@ -51,23 +57,28 @@ func (obj *Reward) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err error) 
 	if err != nil {
 		return err
 	}
-	// Deserialize `RngThreshold` (optional):
+	// Deserialize `RngThreshold`:
+	err = decoder.Decode(&obj.RngThreshold)
+	if err != nil {
+		return err
+	}
+	// Deserialize `Amount`:
+	err = decoder.Decode(&obj.Amount)
+	if err != nil {
+		return err
+	}
+	// Deserialize `Cardinality` (optional):
 	{
 		ok, err := decoder.ReadBool()
 		if err != nil {
 			return err
 		}
 		if ok {
-			err = decoder.Decode(&obj.RngThreshold)
+			err = decoder.Decode(&obj.Cardinality)
 			if err != nil {
 				return err
 			}
 		}
-	}
-	// Deserialize `Amount`:
-	err = decoder.Decode(&obj.Amount)
-	if err != nil {
-		return err
 	}
 	return nil
 }
@@ -105,6 +116,50 @@ func (obj *Tender) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err error) 
 	return nil
 }
 
+type Split struct {
+	TokenAddress ag_solanago.PublicKey
+	OpCode       uint8
+	Share        uint8
+}
+
+func (obj Split) MarshalWithEncoder(encoder *ag_binary.Encoder) (err error) {
+	// Serialize `TokenAddress` param:
+	err = encoder.Encode(obj.TokenAddress)
+	if err != nil {
+		return err
+	}
+	// Serialize `OpCode` param:
+	err = encoder.Encode(obj.OpCode)
+	if err != nil {
+		return err
+	}
+	// Serialize `Share` param:
+	err = encoder.Encode(obj.Share)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (obj *Split) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err error) {
+	// Deserialize `TokenAddress`:
+	err = decoder.Decode(&obj.TokenAddress)
+	if err != nil {
+		return err
+	}
+	// Deserialize `OpCode`:
+	err = decoder.Decode(&obj.OpCode)
+	if err != nil {
+		return err
+	}
+	// Deserialize `Share`:
+	err = decoder.Decode(&obj.Share)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 type QuestError ag_binary.BorshEnum
 
 const (
@@ -116,6 +171,10 @@ const (
 	QuestErrorCannotFindUsableConfigLine
 	QuestErrorUuidMustBeExactly6Length
 	QuestErrorInvalidString
+	QuestErrorSuspiciousTransaction
+	QuestErrorInvalidMint
+	QuestErrorNotEnoughXp
+	QuestErrorInvalidConviction
 )
 
 func (value QuestError) String() string {
@@ -136,6 +195,14 @@ func (value QuestError) String() string {
 		return "UuidMustBeExactly6Length"
 	case QuestErrorInvalidString:
 		return "InvalidString"
+	case QuestErrorSuspiciousTransaction:
+		return "SuspiciousTransaction"
+	case QuestErrorInvalidMint:
+		return "InvalidMint"
+	case QuestErrorNotEnoughXp:
+		return "NotEnoughXp"
+	case QuestErrorInvalidConviction:
+		return "InvalidConviction"
 	default:
 		return ""
 	}

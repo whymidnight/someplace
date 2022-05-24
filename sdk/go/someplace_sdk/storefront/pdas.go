@@ -111,6 +111,20 @@ func GetMintHash(oracle, listing solana.PublicKey, mints uint64) (solana.PublicK
 	)
 }
 
+func GetMintHashVia(oracle solana.PublicKey, mints uint64) (solana.PublicKey, uint8, error) {
+	buf := make([]byte, 8)
+	binary.LittleEndian.PutUint64(buf, mints)
+	return solana.FindProgramAddress(
+		[][]byte{
+			oracle.Bytes(),
+			[]byte("via"),
+			[]byte("via_mint_hash"),
+			buf,
+		},
+		someplace.ProgramID,
+	)
+}
+
 func GetMint(oracle, listing solana.PublicKey, mints uint64) (solana.PublicKey, uint8, error) {
 	buf := make([]byte, 8)
 	binary.LittleEndian.PutUint64(buf, mints)
@@ -156,6 +170,31 @@ func GetViaMapping(oracle, rarityTokenMint solana.PublicKey) (solana.PublicKey, 
 			oracle.Bytes(),
 			[]byte("via"),
 			rarityTokenMint.Bytes(),
+		},
+		someplace.ProgramID,
+	)
+	return addr, bump
+}
+
+func GetRewardTicket(via, quest, questee, oracle solana.PublicKey) (solana.PublicKey, uint8) {
+	// [via.key().as_ref(), quest.key().as_ref(), questee.key().as_ref(), initializer.key().as_ref()]
+	addr, bump, _ := solana.FindProgramAddress(
+		[][]byte{
+			via.Bytes(),
+			quest.Bytes(),
+			questee.Bytes(),
+			oracle.Bytes(),
+		},
+		someplace.ProgramID,
+	)
+	return addr, bump
+}
+
+func GetBatchCardinalitiesReport(batch solana.PublicKey) (solana.PublicKey, uint8) {
+	addr, bump, _ := solana.FindProgramAddress(
+		[][]byte{
+			[]byte("batch_cardinalities"),
+			batch.Bytes(),
 		},
 		someplace.ProgramID,
 	)

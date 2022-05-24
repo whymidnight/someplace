@@ -1,0 +1,26 @@
+Enabled: false
+Index: 7
+Name: aaa
+Duration: 100
+Oracle: 6LopwEBZKvrndrjMiMzSF4uuVwmSvSjqCCPx32rnPnK2
+RequiredLevel: 0
+WlCandyMachines:
+- 6LopwEBZKvrndrjMiMzSF4uuVwmSvSjqCCPx32rnPnK2
+Entitlement: null
+Rewards:
+- MintAddress: 29tZWHPC39bovLj5s1mVUB3uRoURpExtr6GYA5P9dKqj
+  RngThreshold: 40
+  Amount: 2
+  Cardinality: epic
+- MintAddress: Ge3B6xxHaP2wgquDQhWgAXtKRUxNwqfDHkZbw91PK65f
+  RngThreshold: 40
+  Amount: 4
+  Cardinality: common
+- MintAddress: XmUUgttoi4GGHdxdeuDAX2RKq8omkZCK6L3C6oHzSLb
+  RngThreshold: 20
+  Amount: 1
+  Cardinality: legendary
+Tender: null
+TenderSplits: null
+Xp: 0
+Resync: false

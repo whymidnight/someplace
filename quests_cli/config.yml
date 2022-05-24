@@ -1,0 +1,12 @@
+OraclePath: ./oracle.key
+QuestsPath: ./quests.yml
+Splits:
+  - TokenAddress: Et2D5Qhwe1fRexkbV4WnDsxaJ91fBxaQBkEfSaKjgWvo
+    OpCode: 1
+    Share: 40
+  - TokenAddress: 3XeA57a7vZSD6krvu5sGUN3A5SCKJmYadeoiQ8YmACbz
+    OpCode: 0
+    Share: 40
+  - TokenAddress: Hq4Nvb4giHdJDLPeRsqEFjKN8PdGoQJPV7TBd8ng3Ndt
+    OpCode: 1
+    Share: 20

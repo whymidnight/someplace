@@ -1,5 +1,7 @@
 use crate::structs::*;
 use anchor_lang::prelude::*;
+use borsh::BorshDeserialize;
+use std::result::Result;
 
 #[account]
 pub struct QuestAccount {
@@ -20,6 +22,42 @@ pub struct Batch {
     pub name: String, // max 32 bytes
     pub oracle: Pubkey,
     pub data: CandyMachineData,
+}
+
+impl Batch {
+    pub fn from_account_info(a: &AccountInfo) -> Result<Batch, Error> {
+        Ok(BorshDeserialize::deserialize(
+            &mut a.data.borrow_mut().as_ref(),
+        )?)
+    }
+}
+
+#[account]
+#[derive(Default)]
+pub struct BatchCardinalitiesReport {
+    pub batch_account: Pubkey,
+    pub cardinalities_indices: Vec<Vec<u64>>,
+    pub cardinalities_keys: Vec<String>,
+}
+
+impl BatchCardinalitiesReport {
+    pub fn from_account_info(a: &AccountInfo) -> Result<BatchCardinalitiesReport, Error> {
+        Ok(BorshDeserialize::deserialize(
+            &mut a.data.borrow()[8..a.data_len()].as_ref(),
+        )?)
+    }
+    pub fn get_space(cardinalities: Vec<Vec<u64>>) -> usize {
+        let mut sum_indices_mem_size: usize = 0;
+        let mut sum_keys_mem_size: usize = 0;
+        sum_indices_mem_size += 4 * cardinalities.len();
+        sum_keys_mem_size += 4 * cardinalities.len();
+        for cardinality in cardinalities {
+            sum_indices_mem_size += 8 * cardinality.len();
+            sum_keys_mem_size += 32 * cardinality.len();
+        }
+
+        8 + 4 + sum_indices_mem_size + 4 + sum_keys_mem_size + 32
+    }
 }
 
 #[account]
@@ -197,4 +235,26 @@ pub struct MintHash {
 
 impl MintHash {
     pub const LEN: usize = 8 + 32 + 32 + 32 + 8 + 8 + 8;
+}
+
+#[account]
+pub struct RewardTicket {
+    pub oracle: Pubkey,
+    pub initializer: Pubkey,
+    pub batch_account: Pubkey,
+    // pub config_index: u64,
+    // `config_index` was considered but left out to
+    // obscure the reward a little from scraping but
+    // also to optimize +1 batch accounts in
+    // a `rng_nft_after_quest` instruction. since
+    // psuedo-random `config_index` can be derived
+    // later in a `mint_nft_via_reward_ticket` ix.
+    pub fulfilled: i64,
+    pub cardinality_index: u64,
+    pub amount: u64,
+    pub reset: bool,
+}
+
+impl RewardTicket {
+    pub const LEN: usize = 8 + 32 + 32 + 32 + 8 + 8 + 8 + 2;
 }

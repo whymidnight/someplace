@@ -54,3 +54,78 @@ func GetQuestEntitlementTokenAccount(
 	)
 	return addr, bump
 }
+
+func GetQuestDepositTokenAccount(
+	questee solana.PublicKey,
+	quest solana.PublicKey,
+) (solana.PublicKey, uint8) {
+	addr, bump, _ := solana.FindProgramAddress(
+		[][]byte{
+			[]byte("questing"),
+			questee.Bytes(),
+			quest.Bytes(),
+		},
+		questing.ProgramID,
+	)
+	return addr, bump
+}
+
+func GetQuestAccount(
+	questor solana.PublicKey,
+	questee solana.PublicKey,
+	quest solana.PublicKey,
+) (solana.PublicKey, uint8) {
+	addr, bump, _ := solana.FindProgramAddress(
+		[][]byte{
+			[]byte("questing"),
+			questor.Bytes(),
+			questee.Bytes(),
+			quest.Bytes(),
+		},
+		questing.ProgramID,
+	)
+	return addr, bump
+}
+
+func GetQuestorAccount(
+	oracle solana.PublicKey,
+) (solana.PublicKey, uint8) {
+	addr, bump, _ := solana.FindProgramAddress(
+		[][]byte{
+			[]byte("questing"),
+			oracle.Bytes(),
+		},
+		questing.ProgramID,
+	)
+	return addr, bump
+}
+
+func GetQuesteeAccount(
+	pixelBallzMint solana.PublicKey,
+) (solana.PublicKey, uint8) {
+	addr, bump, _ := solana.FindProgramAddress(
+		[][]byte{
+			[]byte("questing"),
+			pixelBallzMint.Bytes(),
+		},
+		questing.ProgramID,
+	)
+	return addr, bump
+}
+
+func GetQuestQuesteeReceiptAccount(
+	questor solana.PublicKey,
+	questee solana.PublicKey,
+	quest solana.PublicKey,
+) (solana.PublicKey, uint8) {
+	addr, bump, _ := solana.FindProgramAddress(
+		[][]byte{
+			[]byte("quest_reward"),
+			questor.Bytes(),
+			questee.Bytes(),
+			quest.Bytes(),
+		},
+		questing.ProgramID,
+	)
+	return addr, bump
+}

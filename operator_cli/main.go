@@ -25,7 +25,7 @@ type configYaml struct {
 }
 
 func init() {
-	someplace.SetProgramID(solana.MustPublicKeyFromBase58("8otw5mCMUtwx91e7q7MAyhWoQVnc3Ng72qwDH58z72VW"))
+	someplace.SetProgramID(solana.MustPublicKeyFromBase58("GXFE4Ym1vxhbXLBx2RxqL5y1Ee3XyFUqDksD7tYjAi8z"))
 }
 
 func readConfig(configPath string) *configYaml {
@@ -95,7 +95,11 @@ func main() {
 			storefront.ReportHashMap(oracle.PublicKey(), config.HashMap)
 			break
 		}
+	case "report_cardinalities":
+		{
+			storefront.ReportCardinalities(oracle)
+			break
+		}
 	}
 
 }
-

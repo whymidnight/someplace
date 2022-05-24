@@ -21,7 +21,7 @@ func SendTx(
 	feePayer solana.PublicKey,
 ) {
 	rpcClient := rpc.New(NETWORK)
-	wsClient, err := ws.Connect(context.TODO(), "wss://api.mainnet-beta.solana.com")
+	wsClient, err := ws.Connect(context.TODO(), "wss://api.devnet.solana.com")
 	if err != nil {
 		log.Println("PANIC!!!", fmt.Errorf("unable to open WebSocket Client - %w", err))
 	}
