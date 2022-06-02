@@ -1,0 +1,4 @@
+quests:
+- "0": ./quests/0_Some Quest.yml
+- "1": ./quests/1_Some Quest.yml
+- "2": ./quests/2_Another Quest.yml

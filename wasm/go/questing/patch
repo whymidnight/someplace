@@ -1,0 +1,1 @@
+var ProgramID ag_solanago.PublicKey = ag_solanago.MustPublicKeyFromBase58("8otw5mCMUtwx91e7q7MAyhWoQVnc3Ng72qwDH58z72VW")

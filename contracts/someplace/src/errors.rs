@@ -38,4 +38,14 @@ pub enum QuestError {
     InvalidCandyMachine,
     #[msg("Suspicious Oracle")]
     SuspiciousOracle,
+    #[msg("Suspicious Token Mint")]
+    SuspiciousTokenMint,
+    #[msg("Suspicious Via Token Mint")]
+    SuspiciousViaTokenMint,
+    #[msg("Malformed Reward Mint")]
+    MalformedRewardMint,
+    #[msg("Suspicious Batches Length")]
+    SuspiciousBatchesLength,
+    #[msg("Invalid Amount")]
+    InvalidAmount,
 }

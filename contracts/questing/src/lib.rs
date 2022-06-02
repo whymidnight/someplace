@@ -199,6 +199,7 @@ pub mod questing {
         let token_program = &ctx.accounts.token_program;
         let initializer = &ctx.accounts.initializer;
         let pixelballz_token_account = &ctx.accounts.pixelballz_token_account;
+        let deposit_token_account = &mut ctx.accounts.deposit_token_account;
 
         if questor.initializer != initializer.key() {
             return Err(QuestError::InvalidInitializer.into());
@@ -217,8 +218,27 @@ pub mod questing {
             return Err(QuestError::NotEnoughXp.into());
         }
 
+        quest_account.index = quest.index;
         quest_account.start_time = now;
         quest_account.end_time = now + quest.duration;
+        quest_account.deposit_token_mint = deposit_token_account.mint;
+        quest_account.initializer = initializer.key();
+
+        // here we protect restarting an already completed `quest_account`.
+        // this is only ever set in `end_quest` ix to designate a safe re-init
+        // of `quest_account`. basically if `Some(quest_account.completed) == false`,
+        // then reset its completion. inversely, if the complete field is true then
+        // throw an err preventing a future unsafe re-init of `quest_account`.
+        //
+        // this effectively allows quest re-entry for those who withdrew earlier
+        // than the calculated end date.
+
+        if quest_account.completed != None {
+            if quest_account.completed == Some(true) {
+                return Err(QuestError::InvalidCompletion.into());
+            }
+        }
+        quest_account.completed = Some(false);
 
         // TODO verify the creator address from nft metadata account
         token::transfer(
@@ -226,7 +246,7 @@ pub mod questing {
                 token_program.to_account_info(),
                 Transfer {
                     from: pixelballz_token_account.to_account_info(),
-                    to: ctx.accounts.deposit_token_account.to_account_info(),
+                    to: deposit_token_account.to_account_info(),
                     authority: ctx.accounts.initializer.to_account_info(),
                 },
             ),
@@ -299,29 +319,15 @@ pub mod questing {
         quest_bump: u8,
     ) -> Result<(), Error> {
         // TODO implement time lock enforcement
-        let _now = Clock::get()?.unix_timestamp;
+        let now = Clock::get()?.unix_timestamp;
         let oracle = &ctx.accounts.oracle;
         let quest = &mut ctx.accounts.quest;
+        let quest_account = &mut ctx.accounts.quest_acc;
         let questor = &mut ctx.accounts.questor;
         let questee = &mut ctx.accounts.questee;
         let quest_questee_receipt = &mut ctx.accounts.quest_questee_receipt;
         let initializer = &ctx.accounts.initializer;
         let initializer_key = initializer.key();
-        /*
-        let seeds = &[
-            QUEST_PDA_SEED,
-            QUEST_PIXELBALLZ_SEED,
-            initializer_key.as_ref(),
-            quest_key.as_ref(),
-        ];
-        let (deposit_token_account, bump) = Pubkey::find_program_address(seeds, &crate::ID);
-        if deposit_token_account != ctx.accounts.deposit_token_account.key() {
-            return Err(QuestError::InvalidInitializer.into());
-        }
-        if deposit_token_account_bump != bump {
-            return Err(QuestError::InvalidInitializer.into());
-        }
-        */
         let quest_key = quest.key();
         let questee_key = questee.key();
         let deposit_token_account_bump_bytes = deposit_token_account_bump.to_le_bytes();
@@ -349,6 +355,14 @@ pub mod questing {
             ),
             1,
         )?;
+        /*
+        if quest_account.end_time > now {
+            msg!("ending early {} {}", quest_account.end_time, now);
+            return Ok(());
+        }
+        */
+
+        quest_account.completed = Some(true);
 
         // Attribute XP to Questor and Questee
         questee.xp += quest.xp;
@@ -424,11 +438,12 @@ pub mod questing {
         )?;
 
         // TIL the number that is subtracting from a minuend is called a subtrahend
-
         quest_questee_receipt.owner = initializer_key;
         quest_questee_receipt.pixelballz_mint = deposit_token_account.mint;
         quest_questee_receipt.reward_mint = reward_mint.key();
+        quest_questee_receipt.amount = reward.amount;
 
         Ok(())
     }
 }
+

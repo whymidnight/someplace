@@ -8,7 +8,7 @@ import (
 	"github.com/gagliardetto/solana-go"
 )
 
-func EnrollQuestor(oracle, pixelBallzMint solana.PublicKey) solana.Instruction {
+func EnrollQuestor(oracle solana.PublicKey) solana.Instruction {
 	questor, _ := quests.GetQuestorAccount(oracle)
 
 	enrollQuestorIx := questing.NewEnrollQuestorInstructionBuilder().

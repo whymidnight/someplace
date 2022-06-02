@@ -1,0 +1,26 @@
+Enabled: false
+Index: 2
+Name: Another Quest
+Duration: 100
+Oracle: 8gvUXYSdqZ5dyGcN1fas5Q7qLRJgJNE693Bt7xgYZXBh
+RequiredLevel: 0
+WlCandyMachines:
+- 6LopwEBZKvrndrjMiMzSF4uuVwmSvSjqCCPx32rnPnK2
+Entitlement: null
+Rewards:
+- MintAddress: CTPPGWvK5teSkBXRKp29zdqGSGt5GjTfj9CdTjMSgutU
+  RngThreshold: 40
+  Amount: 2
+  Cardinality: epic
+- MintAddress: 7PNdiemf7Jzhp4kuXa42TJGzx5GovtdZms6UP88q5jkt
+  RngThreshold: 40
+  Amount: 3
+  Cardinality: common
+- MintAddress: ACaJvcyNNG1YF26mz2CoUx2bTEXaZeajNgirJE4399h4
+  RngThreshold: 20
+  Amount: 1
+  Cardinality: legendary
+Tender: null
+TenderSplits: null
+Xp: 50
+Resync: false

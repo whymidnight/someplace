@@ -4,6 +4,7 @@ use crate::state::*;
 use crate::structs::*;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::sysvar;
+use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 use questing::state::*;
 
@@ -428,6 +429,7 @@ pub struct RngRewardIndiceNFTAfterQuest<'info> {
 #[instruction(via_bump: u8)]
 pub struct RecycleRngRewardIndiceNFTAfterQuest<'info> {
     pub reward_token_account: Account<'info, TokenAccount>,
+    #[account(mut)]
     pub reward_ticket: Box<Account<'info, RewardTicket>>,
     pub batches: Account<'info, Batches>,
     #[account(seeds = [batches.oracle.as_ref(), VIA.as_ref(), via_map.vias_index.to_le_bytes().as_ref()], bump = via_bump)]
@@ -452,7 +454,7 @@ pub struct MintNFTViaRewardTicket<'info> {
     pub via: Box<Account<'info, Via>>,
     #[account(
         init,
-        seeds = [oracle.key().as_ref(), VIA.as_ref(), VIA_MINT_HASH.as_ref(), via.mints.to_le_bytes().as_ref()],
+        seeds = [oracle.key().as_ref(), VIA.as_ref(), VIA_MINT_HASH.as_ref(), via.token_mint.as_ref(), via.mints.to_le_bytes().as_ref()],
         bump,
         payer = payer,
         space = MintHash::LEN
@@ -486,13 +488,9 @@ pub struct MintNFTViaRewardTicket<'info> {
         mint::freeze_authority = payer
     )]
     pub mint: Account<'info, Mint>,
-    #[account(
-        init,
-        payer = payer,
-        token::mint = mint,
-        token::authority = payer,  
-    )]
-    pub mint_ata: Account<'info, TokenAccount>,
+    #[account(mut)]
+    /// CHECK: am lazy
+    pub mint_ata: UncheckedAccount<'info>,
     #[account(mut)]
     /// CHECK: legacy
     pub master_edition: UncheckedAccount<'info>,
@@ -500,6 +498,7 @@ pub struct MintNFTViaRewardTicket<'info> {
     /// CHECK: legacy
     pub token_metadata_program: UncheckedAccount<'info>,
     pub token_program: Program<'info, Token>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
     pub clock: Sysvar<'info, Clock>,

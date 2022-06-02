@@ -6,12 +6,13 @@ pub struct QuestAccount {
     pub index: u64,
     pub start_time: i64,
     pub end_time: i64,
-    pub deposit_token_amount: Pubkey,
+    pub deposit_token_mint: Pubkey,
     pub initializer: Pubkey,
+    pub completed: Option<bool>,
 }
 
 impl QuestAccount {
-    pub const LEN: usize = 8 + 8 + 8 + 8 + 32 + 32;
+    pub const LEN: usize = 8 + 8 + 8 + 8 + 32 + 32 + 2;
 }
 
 #[account]
@@ -86,8 +87,9 @@ pub struct QuestQuesteeEndReceipt {
     pub owner: Pubkey,
     pub pixelballz_mint: Pubkey,
     pub reward_mint: Pubkey,
+    pub amount: u64,
 }
 
 impl QuestQuesteeEndReceipt {
-    pub const LEN: usize = 8 + 32 + 32 + 32;
+    pub const LEN: usize = 8 + 32 + 32 + 32 + 8;
 }

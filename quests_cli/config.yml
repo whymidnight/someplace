@@ -1,5 +1,5 @@
 OraclePath: ./oracle.key
-QuestsPath: ./quests.yml
+QuestsPath: ./db_quests.yml
 Splits:
   - TokenAddress: Et2D5Qhwe1fRexkbV4WnDsxaJ91fBxaQBkEfSaKjgWvo
     OpCode: 1

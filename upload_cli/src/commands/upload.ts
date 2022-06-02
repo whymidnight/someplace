@@ -287,7 +287,6 @@ export async function uploadV2({
           try {
             switch (storage) {
               case StorageType.NftStorage:
-                console.log(manifest);
                 [link, imageLink, animationLink] = await nftStorageUpload(
                   image,
                   animation,
@@ -336,7 +335,6 @@ export async function uploadV2({
                 onChain: false,
                 cardinality: manifest.cardinality,
               };
-              console.log("asdfasedfasdfasdf", cacheContent.items[asset.index]);
               saveCache(cacheName, env, cacheContent);
             }
           } finally {

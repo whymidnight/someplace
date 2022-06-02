@@ -100,6 +100,11 @@ func main() {
 			storefront.ReportCardinalities(oracle)
 			break
 		}
+	case "report_via_mints":
+		{
+			storefront.ReportViaMintingHashMap(oracle.PublicKey())
+			break
+		}
 	}
 
 }

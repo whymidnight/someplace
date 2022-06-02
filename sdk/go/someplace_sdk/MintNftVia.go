@@ -35,7 +35,7 @@ type MintNftVia struct {
 	//
 	// [9] = [WRITE] mint
 	//
-	// [10] = [WRITE, SIGNER] mintAta
+	// [10] = [WRITE] mintAta
 	//
 	// [11] = [WRITE] masterEdition
 	//
@@ -43,26 +43,28 @@ type MintNftVia struct {
 	//
 	// [13] = [] tokenProgram
 	//
-	// [14] = [] systemProgram
+	// [14] = [] associatedTokenProgram
 	//
-	// [15] = [] rent
+	// [15] = [] systemProgram
 	//
-	// [16] = [] clock
+	// [16] = [] rent
 	//
-	// [17] = [] instructionSysvarAccount
+	// [17] = [] clock
 	//
-	// [18] = [WRITE] rewardTokenAccount
+	// [18] = [] instructionSysvarAccount
 	//
-	// [19] = [WRITE] rewardTokenMintAccount
+	// [19] = [WRITE] rewardTokenAccount
 	//
-	// [20] = [] slotHashes
+	// [20] = [WRITE] rewardTokenMintAccount
+	//
+	// [21] = [] slotHashes
 	ag_solanago.AccountMetaSlice `bin:"-"`
 }
 
 // NewMintNftViaInstructionBuilder creates a new `MintNftVia` instruction builder.
 func NewMintNftViaInstructionBuilder() *MintNftVia {
 	nd := &MintNftVia{
-		AccountMetaSlice: make(ag_solanago.AccountMetaSlice, 21),
+		AccountMetaSlice: make(ag_solanago.AccountMetaSlice, 22),
 	}
 	return nd
 }
@@ -191,7 +193,7 @@ func (inst *MintNftVia) GetMintAccount() *ag_solanago.AccountMeta {
 
 // SetMintAtaAccount sets the "mintAta" account.
 func (inst *MintNftVia) SetMintAtaAccount(mintAta ag_solanago.PublicKey) *MintNftVia {
-	inst.AccountMetaSlice[10] = ag_solanago.Meta(mintAta).WRITE().SIGNER()
+	inst.AccountMetaSlice[10] = ag_solanago.Meta(mintAta).WRITE()
 	return inst
 }
 
@@ -233,81 +235,92 @@ func (inst *MintNftVia) GetTokenProgramAccount() *ag_solanago.AccountMeta {
 	return inst.AccountMetaSlice.Get(13)
 }
 
+// SetAssociatedTokenProgramAccount sets the "associatedTokenProgram" account.
+func (inst *MintNftVia) SetAssociatedTokenProgramAccount(associatedTokenProgram ag_solanago.PublicKey) *MintNftVia {
+	inst.AccountMetaSlice[14] = ag_solanago.Meta(associatedTokenProgram)
+	return inst
+}
+
+// GetAssociatedTokenProgramAccount gets the "associatedTokenProgram" account.
+func (inst *MintNftVia) GetAssociatedTokenProgramAccount() *ag_solanago.AccountMeta {
+	return inst.AccountMetaSlice.Get(14)
+}
+
 // SetSystemProgramAccount sets the "systemProgram" account.
 func (inst *MintNftVia) SetSystemProgramAccount(systemProgram ag_solanago.PublicKey) *MintNftVia {
-	inst.AccountMetaSlice[14] = ag_solanago.Meta(systemProgram)
+	inst.AccountMetaSlice[15] = ag_solanago.Meta(systemProgram)
 	return inst
 }
 
 // GetSystemProgramAccount gets the "systemProgram" account.
 func (inst *MintNftVia) GetSystemProgramAccount() *ag_solanago.AccountMeta {
-	return inst.AccountMetaSlice.Get(14)
+	return inst.AccountMetaSlice.Get(15)
 }
 
 // SetRentAccount sets the "rent" account.
 func (inst *MintNftVia) SetRentAccount(rent ag_solanago.PublicKey) *MintNftVia {
-	inst.AccountMetaSlice[15] = ag_solanago.Meta(rent)
+	inst.AccountMetaSlice[16] = ag_solanago.Meta(rent)
 	return inst
 }
 
 // GetRentAccount gets the "rent" account.
 func (inst *MintNftVia) GetRentAccount() *ag_solanago.AccountMeta {
-	return inst.AccountMetaSlice.Get(15)
+	return inst.AccountMetaSlice.Get(16)
 }
 
 // SetClockAccount sets the "clock" account.
 func (inst *MintNftVia) SetClockAccount(clock ag_solanago.PublicKey) *MintNftVia {
-	inst.AccountMetaSlice[16] = ag_solanago.Meta(clock)
+	inst.AccountMetaSlice[17] = ag_solanago.Meta(clock)
 	return inst
 }
 
 // GetClockAccount gets the "clock" account.
 func (inst *MintNftVia) GetClockAccount() *ag_solanago.AccountMeta {
-	return inst.AccountMetaSlice.Get(16)
+	return inst.AccountMetaSlice.Get(17)
 }
 
 // SetInstructionSysvarAccountAccount sets the "instructionSysvarAccount" account.
 func (inst *MintNftVia) SetInstructionSysvarAccountAccount(instructionSysvarAccount ag_solanago.PublicKey) *MintNftVia {
-	inst.AccountMetaSlice[17] = ag_solanago.Meta(instructionSysvarAccount)
+	inst.AccountMetaSlice[18] = ag_solanago.Meta(instructionSysvarAccount)
 	return inst
 }
 
 // GetInstructionSysvarAccountAccount gets the "instructionSysvarAccount" account.
 func (inst *MintNftVia) GetInstructionSysvarAccountAccount() *ag_solanago.AccountMeta {
-	return inst.AccountMetaSlice.Get(17)
+	return inst.AccountMetaSlice.Get(18)
 }
 
 // SetRewardTokenAccountAccount sets the "rewardTokenAccount" account.
 func (inst *MintNftVia) SetRewardTokenAccountAccount(rewardTokenAccount ag_solanago.PublicKey) *MintNftVia {
-	inst.AccountMetaSlice[18] = ag_solanago.Meta(rewardTokenAccount).WRITE()
+	inst.AccountMetaSlice[19] = ag_solanago.Meta(rewardTokenAccount).WRITE()
 	return inst
 }
 
 // GetRewardTokenAccountAccount gets the "rewardTokenAccount" account.
 func (inst *MintNftVia) GetRewardTokenAccountAccount() *ag_solanago.AccountMeta {
-	return inst.AccountMetaSlice.Get(18)
+	return inst.AccountMetaSlice.Get(19)
 }
 
 // SetRewardTokenMintAccountAccount sets the "rewardTokenMintAccount" account.
 func (inst *MintNftVia) SetRewardTokenMintAccountAccount(rewardTokenMintAccount ag_solanago.PublicKey) *MintNftVia {
-	inst.AccountMetaSlice[19] = ag_solanago.Meta(rewardTokenMintAccount).WRITE()
+	inst.AccountMetaSlice[20] = ag_solanago.Meta(rewardTokenMintAccount).WRITE()
 	return inst
 }
 
 // GetRewardTokenMintAccountAccount gets the "rewardTokenMintAccount" account.
 func (inst *MintNftVia) GetRewardTokenMintAccountAccount() *ag_solanago.AccountMeta {
-	return inst.AccountMetaSlice.Get(19)
+	return inst.AccountMetaSlice.Get(20)
 }
 
 // SetSlotHashesAccount sets the "slotHashes" account.
 func (inst *MintNftVia) SetSlotHashesAccount(slotHashes ag_solanago.PublicKey) *MintNftVia {
-	inst.AccountMetaSlice[20] = ag_solanago.Meta(slotHashes)
+	inst.AccountMetaSlice[21] = ag_solanago.Meta(slotHashes)
 	return inst
 }
 
 // GetSlotHashesAccount gets the "slotHashes" account.
 func (inst *MintNftVia) GetSlotHashesAccount() *ag_solanago.AccountMeta {
-	return inst.AccountMetaSlice.Get(20)
+	return inst.AccountMetaSlice.Get(21)
 }
 
 func (inst MintNftVia) Build() *Instruction {
@@ -383,24 +396,27 @@ func (inst *MintNftVia) Validate() error {
 			return errors.New("accounts.TokenProgram is not set")
 		}
 		if inst.AccountMetaSlice[14] == nil {
-			return errors.New("accounts.SystemProgram is not set")
+			return errors.New("accounts.AssociatedTokenProgram is not set")
 		}
 		if inst.AccountMetaSlice[15] == nil {
-			return errors.New("accounts.Rent is not set")
+			return errors.New("accounts.SystemProgram is not set")
 		}
 		if inst.AccountMetaSlice[16] == nil {
-			return errors.New("accounts.Clock is not set")
+			return errors.New("accounts.Rent is not set")
 		}
 		if inst.AccountMetaSlice[17] == nil {
-			return errors.New("accounts.InstructionSysvarAccount is not set")
+			return errors.New("accounts.Clock is not set")
 		}
 		if inst.AccountMetaSlice[18] == nil {
-			return errors.New("accounts.RewardTokenAccount is not set")
+			return errors.New("accounts.InstructionSysvarAccount is not set")
 		}
 		if inst.AccountMetaSlice[19] == nil {
-			return errors.New("accounts.RewardTokenMintAccount is not set")
+			return errors.New("accounts.RewardTokenAccount is not set")
 		}
 		if inst.AccountMetaSlice[20] == nil {
+			return errors.New("accounts.RewardTokenMintAccount is not set")
+		}
+		if inst.AccountMetaSlice[21] == nil {
 			return errors.New("accounts.SlotHashes is not set")
 		}
 	}
@@ -422,7 +438,7 @@ func (inst *MintNftVia) EncodeToTree(parent ag_treeout.Branches) {
 					})
 
 					// Accounts of the instruction:
-					instructionBranch.Child("Accounts[len=21]").ParentFunc(func(accountsBranch ag_treeout.Branches) {
+					instructionBranch.Child("Accounts[len=22]").ParentFunc(func(accountsBranch ag_treeout.Branches) {
 						accountsBranch.Child(ag_format.Meta("            rewardTicket", inst.AccountMetaSlice.Get(0)))
 						accountsBranch.Child(ag_format.Meta("                     via", inst.AccountMetaSlice.Get(1)))
 						accountsBranch.Child(ag_format.Meta("                mintHash", inst.AccountMetaSlice.Get(2)))
@@ -437,13 +453,14 @@ func (inst *MintNftVia) EncodeToTree(parent ag_treeout.Branches) {
 						accountsBranch.Child(ag_format.Meta("           masterEdition", inst.AccountMetaSlice.Get(11)))
 						accountsBranch.Child(ag_format.Meta("    tokenMetadataProgram", inst.AccountMetaSlice.Get(12)))
 						accountsBranch.Child(ag_format.Meta("            tokenProgram", inst.AccountMetaSlice.Get(13)))
-						accountsBranch.Child(ag_format.Meta("           systemProgram", inst.AccountMetaSlice.Get(14)))
-						accountsBranch.Child(ag_format.Meta("                    rent", inst.AccountMetaSlice.Get(15)))
-						accountsBranch.Child(ag_format.Meta("                   clock", inst.AccountMetaSlice.Get(16)))
-						accountsBranch.Child(ag_format.Meta("       instructionSysvar", inst.AccountMetaSlice.Get(17)))
-						accountsBranch.Child(ag_format.Meta("             rewardToken", inst.AccountMetaSlice.Get(18)))
-						accountsBranch.Child(ag_format.Meta("         rewardTokenMint", inst.AccountMetaSlice.Get(19)))
-						accountsBranch.Child(ag_format.Meta("              slotHashes", inst.AccountMetaSlice.Get(20)))
+						accountsBranch.Child(ag_format.Meta("  associatedTokenProgram", inst.AccountMetaSlice.Get(14)))
+						accountsBranch.Child(ag_format.Meta("           systemProgram", inst.AccountMetaSlice.Get(15)))
+						accountsBranch.Child(ag_format.Meta("                    rent", inst.AccountMetaSlice.Get(16)))
+						accountsBranch.Child(ag_format.Meta("                   clock", inst.AccountMetaSlice.Get(17)))
+						accountsBranch.Child(ag_format.Meta("       instructionSysvar", inst.AccountMetaSlice.Get(18)))
+						accountsBranch.Child(ag_format.Meta("             rewardToken", inst.AccountMetaSlice.Get(19)))
+						accountsBranch.Child(ag_format.Meta("         rewardTokenMint", inst.AccountMetaSlice.Get(20)))
+						accountsBranch.Child(ag_format.Meta("              slotHashes", inst.AccountMetaSlice.Get(21)))
 					})
 				})
 		})
@@ -496,6 +513,7 @@ func NewMintNftViaInstruction(
 	masterEdition ag_solanago.PublicKey,
 	tokenMetadataProgram ag_solanago.PublicKey,
 	tokenProgram ag_solanago.PublicKey,
+	associatedTokenProgram ag_solanago.PublicKey,
 	systemProgram ag_solanago.PublicKey,
 	rent ag_solanago.PublicKey,
 	clock ag_solanago.PublicKey,
@@ -520,6 +538,7 @@ func NewMintNftViaInstruction(
 		SetMasterEditionAccount(masterEdition).
 		SetTokenMetadataProgramAccount(tokenMetadataProgram).
 		SetTokenProgramAccount(tokenProgram).
+		SetAssociatedTokenProgramAccount(associatedTokenProgram).
 		SetSystemProgramAccount(systemProgram).
 		SetRentAccount(rent).
 		SetClockAccount(clock).

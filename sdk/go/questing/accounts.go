@@ -9,11 +9,12 @@ import (
 )
 
 type QuestAccount struct {
-	Index              uint64
-	StartTime          int64
-	EndTime            int64
-	DepositTokenAmount ag_solanago.PublicKey
-	Initializer        ag_solanago.PublicKey
+	Index            uint64
+	StartTime        int64
+	EndTime          int64
+	DepositTokenMint ag_solanago.PublicKey
+	Initializer      ag_solanago.PublicKey
+	Completed        *bool `bin:"optional"`
 }
 
 var QuestAccountDiscriminator = [8]byte{150, 179, 23, 90, 199, 60, 121, 92}
@@ -39,8 +40,8 @@ func (obj QuestAccount) MarshalWithEncoder(encoder *ag_binary.Encoder) (err erro
 	if err != nil {
 		return err
 	}
-	// Serialize `DepositTokenAmount` param:
-	err = encoder.Encode(obj.DepositTokenAmount)
+	// Serialize `DepositTokenMint` param:
+	err = encoder.Encode(obj.DepositTokenMint)
 	if err != nil {
 		return err
 	}
@@ -48,6 +49,24 @@ func (obj QuestAccount) MarshalWithEncoder(encoder *ag_binary.Encoder) (err erro
 	err = encoder.Encode(obj.Initializer)
 	if err != nil {
 		return err
+	}
+	// Serialize `Completed` param (optional):
+	{
+		if obj.Completed == nil {
+			err = encoder.WriteBool(false)
+			if err != nil {
+				return err
+			}
+		} else {
+			err = encoder.WriteBool(true)
+			if err != nil {
+				return err
+			}
+			err = encoder.Encode(obj.Completed)
+			if err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }
@@ -81,8 +100,8 @@ func (obj *QuestAccount) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err e
 	if err != nil {
 		return err
 	}
-	// Deserialize `DepositTokenAmount`:
-	err = decoder.Decode(&obj.DepositTokenAmount)
+	// Deserialize `DepositTokenMint`:
+	err = decoder.Decode(&obj.DepositTokenMint)
 	if err != nil {
 		return err
 	}
@@ -90,6 +109,19 @@ func (obj *QuestAccount) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err e
 	err = decoder.Decode(&obj.Initializer)
 	if err != nil {
 		return err
+	}
+	// Deserialize `Completed` (optional):
+	{
+		ok, err := decoder.ReadBool()
+		if err != nil {
+			return err
+		}
+		if ok {
+			err = decoder.Decode(&obj.Completed)
+			if err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }
@@ -516,6 +548,7 @@ type QuestQuesteeEndReceipt struct {
 	Owner          ag_solanago.PublicKey
 	PixelballzMint ag_solanago.PublicKey
 	RewardMint     ag_solanago.PublicKey
+	Amount         uint64
 }
 
 var QuestQuesteeEndReceiptDiscriminator = [8]byte{229, 239, 65, 24, 83, 169, 199, 238}
@@ -538,6 +571,11 @@ func (obj QuestQuesteeEndReceipt) MarshalWithEncoder(encoder *ag_binary.Encoder)
 	}
 	// Serialize `RewardMint` param:
 	err = encoder.Encode(obj.RewardMint)
+	if err != nil {
+		return err
+	}
+	// Serialize `Amount` param:
+	err = encoder.Encode(obj.Amount)
 	if err != nil {
 		return err
 	}
@@ -570,6 +608,11 @@ func (obj *QuestQuesteeEndReceipt) UnmarshalWithDecoder(decoder *ag_binary.Decod
 	}
 	// Deserialize `RewardMint`:
 	err = decoder.Decode(&obj.RewardMint)
+	if err != nil {
+		return err
+	}
+	// Deserialize `Amount`:
+	err = decoder.Decode(&obj.Amount)
 	if err != nil {
 		return err
 	}

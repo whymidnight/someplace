@@ -6,7 +6,8 @@ use crate::state::*;
 use crate::structs::*;
 use anchor_lang::prelude::*;
 use anchor_lang::Discriminator;
-use anchor_spl::token::{self, Burn, MintTo, Transfer};
+use anchor_spl::associated_token::{self, Create};
+use anchor_spl::token::{self, Burn, InitializeAccount, MintTo, Transfer};
 use mpl_token_metadata::state::{MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH};
 use std::result::Result;
 
@@ -873,13 +874,13 @@ pub mod someplace {
         let reward_ticket = &mut ctx.accounts.reward_ticket;
 
         if questee.owner != initializer.key() {
-            return Err(QuestError::SuspiciousTransaction.into());
+            return Err(QuestError::InvalidInitializer.into());
         }
         if via.token_mint != reward_token_account.mint {
-            return Err(QuestError::SuspiciousTransaction.into());
+            return Err(QuestError::SuspiciousTokenMint.into());
         }
         if via.token_mint != via_map.token_mint {
-            return Err(QuestError::SuspiciousTransaction.into());
+            return Err(QuestError::SuspiciousViaTokenMint.into());
         }
         let reward_indice = quest
             .rewards
@@ -887,7 +888,7 @@ pub mod someplace {
             .into_iter()
             .position(|n| n.mint_address == reward_token_account.mint);
         if reward_indice.is_none() {
-            return Err(QuestError::SuspiciousTransaction.into());
+            return Err(QuestError::MalformedRewardMint.into());
         }
 
         // since this is via `ctx.remaining_accounts` - anyone of any intention
@@ -909,13 +910,13 @@ pub mod someplace {
         let mut batch_accounts: Vec<AccountInfo> = Vec::new();
         if batches.counter <= MIN_BATCH_RNG as u64 {
             if ctx_remaining_accounts.len() != batches.counter as usize {
-                return Err(QuestError::SuspiciousTransaction.into());
+                return Err(QuestError::SuspiciousBatchesLength.into());
             }
             batch_accounts =
                 ctx_remaining_accounts[remaining_accounts..ctx_remaining_accounts.len()].to_vec();
         } else if batches.counter > MIN_BATCH_RNG as u64 {
             if ctx_remaining_accounts.len() != MIN_BATCH_RNG as usize {
-                return Err(QuestError::SuspiciousTransaction.into());
+                return Err(QuestError::SuspiciousBatchesLength.into());
             }
             batch_accounts =
                 ctx_remaining_accounts[remaining_accounts..MIN_BATCH_RNG as usize].to_vec();
@@ -969,13 +970,14 @@ pub mod someplace {
         let reward_ticket = &mut ctx.accounts.reward_ticket;
 
         if reward_ticket.amount == 0 {
-            return Err(QuestError::SuspiciousTransaction.into());
+            // return Err(QuestError::InvalidAmount.into());
+            return Ok(());
         }
         if via.token_mint != reward_token_account.mint {
-            return Err(QuestError::SuspiciousTransaction.into());
+            return Err(QuestError::SuspiciousTokenMint.into());
         }
         if via.token_mint != via_map.token_mint {
-            return Err(QuestError::SuspiciousTransaction.into());
+            return Err(QuestError::SuspiciousViaTokenMint.into());
         }
         if quest
             .rewards
@@ -984,7 +986,7 @@ pub mod someplace {
             .position(|n| n.mint_address == reward_token_account.mint)
             .is_none()
         {
-            return Err(QuestError::SuspiciousTransaction.into());
+            return Err(QuestError::MalformedRewardMint.into());
         }
 
         // since this is via `ctx.remaining_accounts` - anyone of any intention
@@ -1006,13 +1008,13 @@ pub mod someplace {
         let mut batch_accounts: Vec<AccountInfo> = Vec::new();
         if batches.counter <= MIN_BATCH_RNG as u64 {
             if ctx_remaining_accounts.len() != batches.counter as usize {
-                return Err(QuestError::SuspiciousTransaction.into());
+                return Err(QuestError::SuspiciousBatchesLength.into());
             }
             batch_accounts =
                 ctx_remaining_accounts[remaining_accounts..ctx_remaining_accounts.len()].to_vec();
         } else if batches.counter > MIN_BATCH_RNG as u64 {
             if ctx_remaining_accounts.len() != MIN_BATCH_RNG as usize {
-                return Err(QuestError::SuspiciousTransaction.into());
+                return Err(QuestError::SuspiciousBatchesLength.into());
             }
             batch_accounts =
                 ctx_remaining_accounts[remaining_accounts..MIN_BATCH_RNG as usize].to_vec();
@@ -1036,11 +1038,11 @@ pub mod someplace {
         let (batch_account, cardinality_index) =
             get_valid_batch_for_cardinality(&batch_accounts, rng, cardinality.to_string())?;
 
-        if reward_ticket.oracle == batches.oracle {
-            return Err(QuestError::SuspiciousTransaction.into());
+        if reward_ticket.oracle != batches.oracle {
+            return Err(QuestError::SuspiciousOracle.into());
         }
-        if reward_ticket.initializer == initializer.key() {
-            return Err(QuestError::SuspiciousTransaction.into());
+        if reward_ticket.initializer != initializer.key() {
+            return Err(QuestError::InvalidInitializer.into());
         }
         reward_ticket.batch_account = batch_account;
         reward_ticket.cardinality_index = cardinality_index;
@@ -1082,8 +1084,34 @@ pub mod someplace {
             return Err(QuestError::InvalidCandyMachine.into());
         }
 
+        let recent_slot_hash = &ctx.accounts.slot_hashes.data.borrow();
+        let most_recent = &recent_slot_hash[12..20];
+        // nominate for r/shittyprogramming 2022 meme of the year pls
+        let rng = u64::from_le_bytes([
+            most_recent[0],
+            most_recent[1],
+            most_recent[2],
+            most_recent[3],
+            most_recent[4],
+            most_recent[5],
+            most_recent[6],
+            most_recent[7],
+        ]);
+        let config_index: u64 = rng
+            % batch_cardinalities_report.cardinalities_indices
+                [reward_ticket.cardinality_index as usize]
+                .len() as u64;
+        let config_line = get_config_line(
+            &candy_machine,
+            batch_cardinalities_report.cardinalities_indices
+                [reward_ticket.cardinality_index as usize][config_index as usize]
+                as usize,
+        )?;
+
         mint_hash.mint = mint.key();
         mint_hash.minter = payer.key();
+        mint_hash.batch = candy_machine.key();
+        mint_hash.config_index = config_index;
         mint_hash.mint_index = via.mints;
         mint_hash.fulfilled = now;
 
@@ -1095,6 +1123,19 @@ pub mod someplace {
         }
 
         // assert_valid_go_live(payer, clock, candy_machine)?;
+        let _may_fail = associated_token::create(CpiContext::new(
+            ctx.accounts.associated_token_program.to_account_info(),
+            Create {
+                mint: mint.to_account_info(),
+                payer: payer.to_account_info(),
+                authority: payer.to_account_info(),
+                rent: ctx.accounts.rent.to_account_info(),
+                associated_token: ctx.accounts.mint_ata.to_account_info(),
+                system_program: ctx.accounts.system_program.to_account_info(),
+                token_program: ctx.accounts.token_program.to_account_info(),
+            },
+        ));
+
         token::mint_to(
             CpiContext::new(
                 ctx.accounts.token_program.to_account_info(),
@@ -1119,30 +1160,6 @@ pub mod someplace {
             1,
         )?;
         reward_ticket.amount -= 1;
-
-        let recent_slot_hash = &ctx.accounts.slot_hashes.data.borrow();
-        let most_recent = &recent_slot_hash[12..20];
-        // nominate for r/shittyprogramming 2022 meme of the year pls
-        let rng = u64::from_le_bytes([
-            most_recent[0],
-            most_recent[1],
-            most_recent[2],
-            most_recent[3],
-            most_recent[4],
-            most_recent[5],
-            most_recent[6],
-            most_recent[7],
-        ]);
-        let config_index: u64 = rng
-            % batch_cardinalities_report.cardinalities_indices
-                [reward_ticket.cardinality_index as usize]
-                .len() as u64;
-        let config_line = get_config_line(
-            &candy_machine,
-            batch_cardinalities_report.cardinalities_indices
-                [reward_ticket.cardinality_index as usize][config_index as usize]
-                as usize,
-        )?;
 
         let cm_key = candy_machine.key();
         let authority_seeds = [PREFIX, cm_key.as_ref(), &[creator_bump]];

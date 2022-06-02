@@ -649,6 +649,11 @@ const (
 	QuestErrorIsReset
 	QuestErrorInvalidCandyMachine
 	QuestErrorSuspiciousOracle
+	QuestErrorSuspiciousTokenMint
+	QuestErrorSuspiciousViaTokenMint
+	QuestErrorMalformedRewardMint
+	QuestErrorSuspiciousBatchesLength
+	QuestErrorInvalidAmount
 )
 
 func (value QuestError) String() string {
@@ -689,6 +694,16 @@ func (value QuestError) String() string {
 		return "InvalidCandyMachine"
 	case QuestErrorSuspiciousOracle:
 		return "SuspiciousOracle"
+	case QuestErrorSuspiciousTokenMint:
+		return "SuspiciousTokenMint"
+	case QuestErrorSuspiciousViaTokenMint:
+		return "SuspiciousViaTokenMint"
+	case QuestErrorMalformedRewardMint:
+		return "MalformedRewardMint"
+	case QuestErrorSuspiciousBatchesLength:
+		return "SuspiciousBatchesLength"
+	case QuestErrorInvalidAmount:
+		return "InvalidAmount"
 	default:
 		return ""
 	}

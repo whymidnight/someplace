@@ -4,6 +4,7 @@ go 1.16
 
 require (
 	creaturez.nft/utils v0.0.0-00010101000000-000000000000
+	github.com/btcsuite/btcutil v1.0.2
 	github.com/davecgh/go-spew v1.1.1
 	github.com/gagliardetto/binary v0.6.1
 	github.com/gagliardetto/gofuzz v1.2.2

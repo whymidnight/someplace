@@ -2,6 +2,7 @@ package quests
 
 import (
 	"errors"
+	"fmt"
 
 	"creaturez.nft/questing"
 	"creaturez.nft/questing/quests"
@@ -13,6 +14,7 @@ func ReportQuests(oracle solana.PublicKey, questsPath string) {
 
 	questsPda, _ := quests.GetQuests(oracle)
 	questsPdaData := quests.GetQuestsData(questsPda)
+  fmt.Println(questsPda, questsPdaData)
 	for i := range make([]int, questsPdaData.Quests) {
 		quest, _ := quests.GetQuest(oracle, uint64(i))
 		questData := quests.GetQuestData(quest)

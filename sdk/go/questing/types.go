@@ -175,6 +175,7 @@ const (
 	QuestErrorInvalidMint
 	QuestErrorNotEnoughXp
 	QuestErrorInvalidConviction
+	QuestErrorInvalidCompletion
 )
 
 func (value QuestError) String() string {
@@ -203,6 +204,8 @@ func (value QuestError) String() string {
 		return "NotEnoughXp"
 	case QuestErrorInvalidConviction:
 		return "InvalidConviction"
+	case QuestErrorInvalidCompletion:
+		return "InvalidCompletion"
 	default:
 		return ""
 	}

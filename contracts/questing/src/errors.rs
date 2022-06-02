@@ -26,4 +26,6 @@ pub enum QuestError {
     NotEnoughXp,
     #[msg("Invalid conviction")]
     InvalidConviction,
+    #[msg("Invalid Completion")]
+    InvalidCompletion,
 }

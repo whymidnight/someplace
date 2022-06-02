@@ -12,7 +12,7 @@ import (
 
 type QuestMetaReward struct {
 	MintAddress  *ag_solanago.PublicKey `yaml:"MintAddress"`
-	RngThreshold uint8                  `yaml:"RngThreshold"`
+	RngThreshold *uint8                  `yaml:"RngThreshold"`
 	Amount       uint64                 `yaml:"Amount"`
 	Cardinality  *string                `yaml:"Cardinality"`
 }
@@ -176,7 +176,7 @@ func (quest QuestMeta) to_questing_quest() (questing.Quest, []solana.PrivateKey)
 				MintAddress:  *mintAddress,
 				Amount:       reward.Amount,
 				Cardinality:  reward.Cardinality,
-				RngThreshold: reward.RngThreshold,
+				RngThreshold: *reward.RngThreshold,
 			})
 		}
 		return rewards
@@ -219,9 +219,7 @@ func WriteQuestsAsMetas(questsData []questing.Quest, questsPath string) {
 				}
 				return &QuestMetaReward{
 					MintAddress:  &questData.Entitlement.MintAddress,
-					RngThreshold: questData.Entitlement.RngThreshold,
 					Amount:       questData.Entitlement.Amount,
-					Cardinality:  questData.Entitlement.Cardinality,
 				}
 			}(),
 			Rewards: func() []QuestMetaReward {
@@ -229,7 +227,7 @@ func WriteQuestsAsMetas(questsData []questing.Quest, questsPath string) {
 				for _, reward := range questData.Rewards {
 					questMetaRewards = append(questMetaRewards, QuestMetaReward{
 						MintAddress:  reward.MintAddress.ToPointer(),
-						RngThreshold: reward.RngThreshold,
+						RngThreshold: &reward.RngThreshold,
 						Amount:       reward.Amount,
 						Cardinality:  reward.Cardinality,
 					})

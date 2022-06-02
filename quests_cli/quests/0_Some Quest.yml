@@ -1,0 +1,26 @@
+Enabled: false
+Index: 0
+Name: Some Quest
+Duration: 100
+Oracle: 8gvUXYSdqZ5dyGcN1fas5Q7qLRJgJNE693Bt7xgYZXBh
+RequiredLevel: 0
+WlCandyMachines:
+- 6LopwEBZKvrndrjMiMzSF4uuVwmSvSjqCCPx32rnPnK2
+Entitlement: null
+Rewards:
+- MintAddress: CaSqeaHvx8e847rkjLWPvD7dTr9bVvjG7wV7KUsq1H7p
+  RngThreshold: 40
+  Amount: 2
+  Cardinality: epic
+- MintAddress: AKHStmJ5kc5rPM6UyceKgK932KotMsZfkzQAKvQNTQtS
+  RngThreshold: 40
+  Amount: 4
+  Cardinality: common
+- MintAddress: 9f1Lx6roGjnG1cQ36BVmmuYMQTHAn9tF6roTrt7ooKWq
+  RngThreshold: 20
+  Amount: 1
+  Cardinality: legendary
+Tender: null
+TenderSplits: null
+Xp: 0
+Resync: false

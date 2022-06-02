@@ -16,7 +16,7 @@ type RecycleRngNftAfterQuest struct {
 
 	// [0] = [] rewardTokenAccount
 	//
-	// [1] = [] rewardTicket
+	// [1] = [WRITE] rewardTicket
 	//
 	// [2] = [] batches
 	//
@@ -61,7 +61,7 @@ func (inst *RecycleRngNftAfterQuest) GetRewardTokenAccountAccount() *ag_solanago
 
 // SetRewardTicketAccount sets the "rewardTicket" account.
 func (inst *RecycleRngNftAfterQuest) SetRewardTicketAccount(rewardTicket ag_solanago.PublicKey) *RecycleRngNftAfterQuest {
-	inst.AccountMetaSlice[1] = ag_solanago.Meta(rewardTicket)
+	inst.AccountMetaSlice[1] = ag_solanago.Meta(rewardTicket).WRITE()
 	return inst
 }
 

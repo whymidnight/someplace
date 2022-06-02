@@ -111,7 +111,7 @@ func GetMintHash(oracle, listing solana.PublicKey, mints uint64) (solana.PublicK
 	)
 }
 
-func GetMintHashVia(oracle solana.PublicKey, mints uint64) (solana.PublicKey, uint8, error) {
+func GetMintHashVia(oracle, viaMint solana.PublicKey, mints uint64) (solana.PublicKey, uint8, error) {
 	buf := make([]byte, 8)
 	binary.LittleEndian.PutUint64(buf, mints)
 	return solana.FindProgramAddress(
@@ -119,6 +119,7 @@ func GetMintHashVia(oracle solana.PublicKey, mints uint64) (solana.PublicKey, ui
 			oracle.Bytes(),
 			[]byte("via"),
 			[]byte("via_mint_hash"),
+			viaMint.Bytes(),
 			buf,
 		},
 		someplace.ProgramID,

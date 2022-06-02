@@ -11,7 +11,7 @@ pub struct StartQuest<'info> {
     #[account(mut)]
     pub initializer: Signer<'info>,
     #[account(
-        init,
+        init_if_needed,
         seeds = [QUEST_PDA_SEED.as_ref(), questee.key().as_ref(), quest.key().as_ref()],
         bump,
         payer = initializer,
@@ -24,7 +24,7 @@ pub struct StartQuest<'info> {
     #[account(mut)]
     pub pixelballz_token_account: Box<Account<'info, TokenAccount>>,
     #[account(
-        init,
+        init_if_needed,
         seeds = [QUEST_PDA_SEED.as_ref(), questor.key().as_ref(), questee.key().as_ref(), quest.key().as_ref()],
         bump,
         payer = initializer,
@@ -44,7 +44,7 @@ pub struct StartQuest<'info> {
 #[instruction(deposit_token_account_bump: u8)]
 pub struct EndQuest<'info> {
     #[account(
-        init,
+        init_if_needed,
         seeds = [QUEST_REWARD_SEED.as_ref(), questor.key().as_ref(), questee.key().as_ref(), quest.key().as_ref()],
         bump,
         payer = initializer,

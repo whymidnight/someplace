@@ -3,6 +3,7 @@ package quests
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"creaturez.nft/questing"
 	"creaturez.nft/questing/quests/ops"
@@ -20,7 +21,6 @@ func SyncQuests(oracle solana.PrivateKey, questsPath string) {
 
 	signers := make([]solana.PrivateKey, 0)
 	for _, quest := range *questsMetasCreate {
-		fmt.Println(",....")
 		resyncInstructions := make([]solana.Instruction, 0)
 		_ = resyncInstructions
 		rewards := make([]questing.Reward, 0)
@@ -29,7 +29,7 @@ func SyncQuests(oracle solana.PrivateKey, questsPath string) {
 			signers = append(signers, mintKey)
 			rewards = append(rewards, questing.Reward{
 				MintAddress:  mintKey.PublicKey(),
-				RngThreshold: reward.RngThreshold,
+				RngThreshold: *reward.RngThreshold,
 				Amount:       reward.Amount,
 				Cardinality:  reward.Cardinality,
 			})
@@ -60,14 +60,26 @@ func SyncQuests(oracle solana.PrivateKey, questsPath string) {
 			}
 			return &tenderSplits
 		}()
+		entitlement := func() *questing.Reward {
+			if quest.Entitlement == nil {
+				return nil
+			}
+			reward := questing.Reward{
+				MintAddress:  quest.Tender.MintAddress,
+				Amount:       quest.Tender.Amount,
+				RngThreshold: 0,
+			}
+			return &reward
+		}()
 
 		questData := questing.Quest{
+      Enabled:         quest.Enabled,
 			Index:           quest.Index,
 			Name:            quest.Name,
 			Duration:        quest.Duration,
 			Oracle:          quest.Oracle,
 			WlCandyMachines: quest.WlCandyMachines,
-			Entitlement:     &questing.Reward{},
+			Entitlement:     entitlement,
 			Rewards:         rewards,
 			Tender:          tender,
 			TenderSplits:    tenderSplits,
@@ -85,6 +97,30 @@ func SyncQuests(oracle solana.PrivateKey, questsPath string) {
 		utils.SendTx(
 			"list",
 			resyncInstructions,
+			append(signers, oracle),
+			oracle.PublicKey(),
+		)
+
+		fmt.Println("sleeping for 5 seconds")
+		time.Sleep(5 * time.Second)
+
+		viaIxs := storefront_ops.EnableViasForRarityTokens(oracle.PublicKey(), func() []someplace.ViaMint {
+			viaMints := make([]someplace.ViaMint, 0)
+			for _, reward := range questData.Rewards {
+				fmt.Println(reward)
+				viaMints = append(viaMints, someplace.ViaMint{
+					MintAddress: reward.MintAddress,
+					Rarity:      *reward.Cardinality,
+				})
+			}
+			return viaMints
+		}())
+		utils.SendTx(
+			"list",
+			append(
+				make([]solana.Instruction, 0),
+				viaIxs...,
+			),
 			append(signers, oracle),
 			oracle.PublicKey(),
 		)

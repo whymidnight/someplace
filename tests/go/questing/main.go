@@ -2,11 +2,13 @@ package main
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
 
+	"github.com/btcsuite/btcutil/base58"
 	ag_binary "github.com/gagliardetto/binary"
 	"github.com/gagliardetto/solana-go/programs/token"
 
@@ -71,6 +73,10 @@ func main() {
 	startAndEndQuest()
 	// ETZoY7cJfD8N7EVx5tShRYS1vxgv3F4Dkavjb52kGRyj
 	// treasureVerify()
+
+  hash := sha256.Sum256([]byte("account:QuestAccount"))
+  encoded := base58.Encode(hash[:8])
+  fmt.Println(string(encoded))
 
 }
 
@@ -975,7 +981,7 @@ func startQuest() {
 		if questorData == nil {
 			questInstructions = append(
 				questInstructions,
-				ops.EnrollQuestor(oracle.PublicKey(), pixelBallzMint.PublicKey()),
+				ops.EnrollQuestor(oracle.PublicKey()),
 			)
 		}
 
@@ -1115,7 +1121,7 @@ func startAndEndQuest() {
 		if questorData == nil {
 			questInstructions = append(
 				questInstructions,
-				ops.EnrollQuestor(oracle.PublicKey(), pixelBallzMint.PublicKey()),
+				ops.EnrollQuestor(oracle.PublicKey()),
 			)
 		}
 
@@ -1128,7 +1134,7 @@ func startAndEndQuest() {
 			)
 		}
 
-		questPda, _ := quests.GetQuest(oracle.PublicKey(), 7)
+		questPda, _ := quests.GetQuest(oracle.PublicKey(), 0)
 		questAccount, _ := quests.GetQuestAccount(questor, questee, questPda)
 		questDeposit, _ := quests.GetQuestDepositTokenAccount(questee, questPda)
 
@@ -1181,7 +1187,7 @@ func startAndEndQuest() {
 
 		questee, _ := quests.GetQuesteeAccount(pixelBallzMint.PublicKey())
 
-		questPda, questPdaBump := quests.GetQuest(oracle.PublicKey(), 7)
+		questPda, questPdaBump := quests.GetQuest(oracle.PublicKey(), 0)
 		questAccount, _ := quests.GetQuestAccount(questor, questee, questPda)
 		questDeposit, questDepositBump := quests.GetQuestDepositTokenAccount(questee, questPda)
 		questQuesteeReceipt, _ := quests.GetQuestQuesteeReceiptAccount(questor, questee, questPda)
@@ -1239,7 +1245,7 @@ func startAndEndQuest() {
 		// rng after quest end
 		batches, _ := storefront.GetBatches(oracle.PublicKey())
 		batchesData := storefront.GetBatchesData(batches)
-		questPda, _ := quests.GetQuest(oracle.PublicKey(), 7)
+		questPda, _ := quests.GetQuest(oracle.PublicKey(), 0)
 		questor, _ := quests.GetQuestorAccount(oracle.PublicKey())
 		questee, _ := quests.GetQuesteeAccount(pixelBallzMint.PublicKey())
 
@@ -1250,6 +1256,7 @@ func startAndEndQuest() {
 
 		viaMap, _ := storefront.GetViaMapping(oracle.PublicKey(), questQuesteeReceiptData.RewardMint)
 		viaMapData := storefront.GetViaMappingData(viaMap)
+		fmt.Println(viaMap, viaMapData)
 		via, viaBump := storefront.GetVia(batchesData.Oracle, viaMapData.ViasIndex)
 		viaData := storefront.GetViaData(via)
 		viaDataJs, _ := json.MarshalIndent(viaData, "", "  ")
@@ -1328,9 +1335,9 @@ func startAndEndQuest() {
 
 			var instructions []solana.Instruction
 
-            mint, _, _ := storefront.GetMint(cm.Oracle, via, viaData.Mints)
+			      mint, _, _ := storefront.GetMint(cm.Oracle, via, viaData.Mints)
 			mintAta := solana.NewWallet()
-			mintViaHash, _, _ := storefront.GetMintHashVia(cm.Oracle, viaData.Mints)
+			mintViaHash, _, _ := storefront.GetMintHashVia(cm.Oracle, viaData.TokenMint, viaData.Mints)
 			metadataAddress, err := utils.GetMetadata(mint)
 			if err != nil {
 				panic(err)
